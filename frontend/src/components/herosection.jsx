@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 export default function HeroSection() {
   return (
-    <section className="bg-[#0a0f1c] text-white py-24 relative overflow-hidden">
+    <section className="bg-[#04192d] text-white py-24 relative overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 text-center relative z-10">
         {/* Badge */}
         <span className="text-xs px-3 py-1 rounded-full bg-[#1a1f30] text-lime-400 border border-lime-500 inline-block mb-4 font-medium">

@@ -5,7 +5,7 @@ import HowItWorks from "./Howitworks";
 
 const Navbar = () => {
   return (
-    <nav className="w-full px-6 py-4 bg-[#0A132A] flex items-center justify-between">
+    <nav className="w-full px-6 py-4 bg-[#07243f] flex items-center justify-between">
       {/* Logo */}
       <div className="flex items-center">
         <div className="text-yellow-400 text-2xl font-bold border-2 border-yellow-400 rounded-full w-10 h-10 flex items-center justify-center">

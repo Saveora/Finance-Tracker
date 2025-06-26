@@ -25,7 +25,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="bg-[#0a0f1c] py-20 text-white">
+    <section className="bg-[#04192d] py-20 text-white">
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-3xl md:text-4xl font-semibold mb-12">How Saveora works</h2>
         <div className="grid md:grid-cols-3 gap-8">
