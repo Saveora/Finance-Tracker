@@ -1,0 +1,43 @@
+"use client";
+import React from "react";
+import Link from "next/link";
+import HowItWorks from "./Howitworks";
+
+const Navbar = () => {
+  return (
+    <nav className="w-full px-6 py-4 bg-[#0A132A] flex items-center justify-between">
+      {/* Logo */}
+      <div className="flex items-center">
+        <div className="text-yellow-400 text-2xl font-bold border-2 border-yellow-400 rounded-full w-10 h-10 flex items-center justify-center">
+          S
+        </div>
+      </div>
+
+      {/* Navigation Links */}
+      <div className="hidden md:flex space-x-8 text-white text-sm font-medium">
+        <Link href="#how-it-works" className="hover:text-yellow-300 transition">
+          How it works
+        </Link>
+        <Link href="#features" className="hover:text-yellow-300 transition">
+          Features
+        </Link>
+        <Link href="#testimonials" className="hover:text-yellow-300 transition">
+          Testimonials
+        </Link>
+        <Link href="#pricing" className="hover:text-yellow-300 transition">
+          Pricing
+        </Link>
+      </div>
+
+      {/* Contact Us Button */}
+      <Link href="#contact">
+        <button className="bg-yellow-400 text-black text-sm font-medium px-5 py-2 rounded-full shadow-lg hover:brightness-110 transition-all flex items-center gap-2">
+          Contact us
+          <span className="text-lg">↗</span>
+        </button>
+      </Link>
+    </nav>
+  );
+};
+
+export default Navbar;
