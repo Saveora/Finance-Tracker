@@ -1,4 +1,3 @@
-// components/Features.js
 import { FaUniversity, FaBullseye, FaClock, FaLock } from 'react-icons/fa';
 
 const features = [
@@ -36,7 +35,15 @@ export default function FeaturesSection() {
 
       <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {features.map((feature, index) => (
-          <div key={index} className="bg-black rounded-2xl p-6 flex items-start gap-4">
+          <div
+            key={index}
+            className="bg-black rounded-2xl p-6 flex items-start gap-4 
+            shadow-sm transition-all duration-300 
+            hover:scale-105
+            hover:shadow-[0_0_25px_rgba(255,215,21,0.8)]
+
+            "
+          >
             <div>{feature.icon}</div>
             <div>
               <h3 className="font-semibold text-lg mb-1">{feature.title}</h3>

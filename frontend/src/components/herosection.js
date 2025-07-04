@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import "./SmartBanner.css";
 
 export default function HeroSection() {
   return (
@@ -30,7 +31,7 @@ export default function HeroSection() {
 
         {/* CTA Button */}
         <div className="flex justify-center mt-8">
-          <button className="bg-yellow-400 text-black font-semibold px-6 py-3 rounded-full shadow-md hover:bg-yellow-300 hover:shadow-[0_5px_30px_rgba(0,0,0,0.6)] transition duration-300 flex items-center gap-2">
+          <button className="bg-yellow-400 cta-button text-black font-semibold px-6 py-3 rounded-full shadow-md hover:bg-yellow-300 hover:shadow-[0_5px_30px_rgba(0,0,0,0.6)] transition duration-300 flex items-center gap-2">
             Get Started Now
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +53,7 @@ export default function HeroSection() {
 
       {/* Dashboard Image Section */}
       <div className="mt-20 flex justify-center relative z-10">
-        <div className="w-full max-w-4xl rounded-3xl overflow-hidden border border-[#2c3e50] backdrop-blur-sm transition-transform duration-300 transform hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.2)] shadow-[0_25px_60px_-10px_rgba(0,0,0,0)]">
+        <div className="w-full max-w-4xl rounded-3xl overflow-hidden border border-[#2c3e50] transition-transform duration-300 transform hover:scale-105 ">
           <Image
             src="/dashboard-preview.png"
             alt="Finance Dashboard Preview"

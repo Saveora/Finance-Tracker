@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const faqData = [
   {
@@ -39,7 +40,7 @@ const faqData = [
 ];
 
 export default function FaqAccordion() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(null);
 
   const toggle = (index) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? null : index));
@@ -57,10 +58,9 @@ export default function FaqAccordion() {
           <p className="mb-2">
             Here's everything you need to know before getting started.
           </p>
-          <a href="#" className="font-semibold" style={{ color: '#FFD700' }}>
+          <a href="#" className="font-semibold" style={{ color: "#FFD700" }}>
             Contact us →
           </a>
-
         </div>
       </div>
 
@@ -68,17 +68,17 @@ export default function FaqAccordion() {
         {faqData.map((item, index) => (
           <div
             key={index}
-            className={`rounded-xl p-4 transition-all ${
-              activeIndex === index ? "bg-black" : "bg-black"
-            }`}
+            className="rounded-xl p-4 transition-all bg-black"
           >
             <div
               onClick={() => toggle(index)}
               className="flex items-center justify-between cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold px-3 py-1 rounded-full"
-                style={{ backgroundColor: "#04192D", color: '#FFD700' }}>
+                <span
+                  className="text-sm font-bold px-3 py-1 rounded-full"
+                  style={{ backgroundColor: "#04192D", color: "#FFD700" }}
+                >
                   {item.number}
                 </span>
 
@@ -90,9 +90,21 @@ export default function FaqAccordion() {
                 {activeIndex === index ? "−" : "+"}
               </span>
             </div>
-            {activeIndex === index && (
-              <p className="mt-3 text-sm text-slate-400">{item.answer}</p>
-            )}
+
+            <AnimatePresence initial={false}>
+              {activeIndex === index && (
+                <motion.p
+                  key="answer"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden mt-3 text-sm text-slate-400"
+                >
+                  {item.answer}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
         ))}
       </div>

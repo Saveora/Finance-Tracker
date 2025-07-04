@@ -35,7 +35,7 @@ export default function HowItWorks() {
           {steps.map((item, idx) => (
             <div
               key={idx}
-              className="bg-[#06142E] rounded-3xl p-6 border border-[#1a1f30] shadow-[0_4px_20px_rgba(0,0,0,0)] transition transform hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.3)] duration-300 relative z-10"
+              className="bg-[#000000] rounded-3xl p-6 border border-[#1a1f30]  transition transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,215,0,0.8)] duration-300 relative z-10"
             >
               <div className="bg-[#07243f] rounded-2xl p-2 mb-3 shadow-inner">
                 <Image

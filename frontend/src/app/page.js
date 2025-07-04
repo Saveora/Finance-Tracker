@@ -22,7 +22,7 @@ export default function Home() {
         <Features />
       </section>
 
-      <section id="faqaccordion">
+      <section id="faqs">
         <FaqAccordion />
       </section>
 
