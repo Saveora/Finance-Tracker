@@ -7,5 +7,12 @@ module.exports = {
   theme: {
     extend: {},
   },
+  theme: {
+    extend: {
+      colors: {
+        gold: "#FFD700",
+      },
+    },
+  },
   plugins: [],
 }

@@ -1,5 +1,9 @@
 import HowItWorks from "../components/Howitworks";
 import HeroSection from "../components/HeroSection";
+import Features from "@/components/Features";
+import FaqAccordion from "@/components/FaqAccordion";
+import SmartBanner from "@/components/SmartBanner";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -13,27 +17,19 @@ export default function Home() {
       </section>
 
       <section id="features">
-        <div className="h-screen bg-gray-100 flex items-center justify-center text-2xl">
-          Features section placeholder
-        </div>
+        <Features />
       </section>
 
-      <section id="testimonials">
-        <div className="h-screen bg-gray-200 flex items-center justify-center text-2xl">
-          Testimonials section placeholder
-        </div>
+      <section id="faqaccordion">
+        <FaqAccordion />
       </section>
 
-      <section id="pricing">
-        <div className="h-screen bg-gray-300 flex items-center justify-center text-2xl">
-          Pricing section placeholder
-        </div>
+      <section id="smartbanner">
+        <SmartBanner />
       </section>
 
-      <section id="contact">
-        <div className="h-screen bg-gray-400 flex items-center justify-center text-2xl">
-          Contact section placeholder
-        </div>
+      <section id="footer">
+        <Footer />
       </section>
     </>
   );

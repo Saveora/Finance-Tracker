@@ -25,7 +25,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="bg-[#04192d] py-20 text-white">
+    <section className="bg-[#030917] py-20 text-white">
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-3xl md:text-4xl font-semibold mb-12">How Saveora works</h2>
         <div className="grid md:grid-cols-3 gap-8">
@@ -42,7 +42,7 @@ export default function HowItWorks() {
                 className="mb-6 rounded-xl"
               />
               
-              <p className="text-sm text-lime-400 font-medium mb-2">• {item.step}</p>
+              <p className="text-sm text-gold font-medium mb-2">• {item.step}</p>
               <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
               <p className="text-sm text-gray-300">{item.desc}</p>
             </div>

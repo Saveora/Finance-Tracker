@@ -4,10 +4,10 @@ import Image from 'next/image'
 
 export default function HeroSection() {
   return (
-    <section className="bg-[#04192d] text-white py-24 relative overflow-hidden">
+    <section className="bg-[#030917] text-white py-24 relative overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 text-center relative z-10">
         {/* Badge */}
-        <span className="text-xs px-3 py-1 rounded-full bg-[#1a1f30] text-lime-400 border border-lime-500 inline-block mb-4 font-medium">
+        <span className="text-xs px-3 py-1 rounded-full bg-[#030917] text-gold border border-gold inline-block mb-4 font-medium">
           All-in-One Finance Toolkit
         </span>
 
@@ -24,7 +24,7 @@ export default function HeroSection() {
         </p>
 
         {/* Call-to-action button */}
-        <button className="bg-yellow-400 text-black font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-yellow-300 transition duration-200">
+        <button className="bg-gold text-black font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-gold transition duration-200">
           Get Started Now →
         </button>
       </div>
@@ -43,7 +43,7 @@ export default function HeroSection() {
       </div>
 
       {/* Optional glowing background effect behind button */}
-      <div className="absolute top-[265px] left-1/2 -translate-x-1/2 w-72 h-72 bg-yellow-400 opacity-20 blur-3xl rounded-full z-0" />
+      <div className="absolute top-[265px] left-1/2 -translate-x-1/2 w-72 h-72 bg-gold opacity-20 blur-3xl rounded-full z-0" />
     </section>
   )
 }
