@@ -37,7 +37,7 @@ export default function HowItWorks() {
               key={idx}
               className="bg-[#000000] rounded-3xl p-6 border border-[#1a1f30]  transition transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,215,0,0.8)] duration-300 relative z-10"
             >
-              <div className="bg-[#07243f] rounded-2xl p-2 mb-3 shadow-inner">
+              <div className="bg-[#000000] rounded-2xl p-2 mb-3 shadow-inner">
                 <Image
                   src={item.img}
                   alt={`Step ${idx + 1}`}
