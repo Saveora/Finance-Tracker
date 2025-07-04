@@ -9,7 +9,9 @@ export default function Home() {
       
 
       <section id="how-it-works">
+      
         <HowItWorks />
+        
       </section>
 
       <section id="features">

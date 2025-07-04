@@ -25,30 +25,44 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="bg-[#04192d] py-20 text-white">
-      <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-3xl md:text-4xl font-semibold mb-12">How Saveora works</h2>
-        <div className="grid md:grid-cols-3 gap-8">
+    <section className="bg-[#030917] py-24 text-white relative overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold mb-16 text-white">
+          How Saveora works
+        </h2>
+
+        <div className="grid md:grid-cols-3 gap-10">
           {steps.map((item, idx) => (
             <div
               key={idx}
-              className={`bg-[#0f172a] rounded-3xl p-6 flex flex-col items-center text-center border border-transparent`}
+              className="bg-[#06142E] rounded-3xl p-6 border border-[#1a1f30] shadow-[0_4px_20px_rgba(0,0,0,0)] transition transform hover:scale-105 hover:shadow-[0_15px_50px_rgba(0,0,0,0.3)] duration-300 relative z-10"
             >
-              <Image
-                src={item.img}
-                alt={`Step ${idx + 1}`}
-                width={300}
-                height={300}
-                className="mb-6 rounded-xl"
-              />
-              
-              <p className="text-sm text-lime-400 font-medium mb-2">• {item.step}</p>
-              <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-              <p className="text-sm text-gray-300">{item.desc}</p>
+              <div className="bg-[#07243f] rounded-2xl p-2 mb-3 shadow-inner">
+                <Image
+                  src={item.img}
+                  alt={`Step ${idx + 1}`}
+                  width={300}
+                  height={200}
+                  className="rounded-xl mx-auto"
+                />
+              </div>
+
+              <p className="text-sm text-[#FFD700] font-semibold mb-2 tracking-wide">
+                • {item.step}
+              </p>
+
+              <h3 className="text-lg font-bold mb-2 text-white">
+                {item.title}
+              </h3>
+
+              <p className="text-sm text-gray-400">{item.desc}</p>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Optional soft background glow */}
+      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-[#0084FF] opacity-10 blur-3xl rounded-full z-0" />
     </section>
   )
 }
