@@ -28,7 +28,7 @@ const Navbar = () => {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      // If we are on another page (like /auth), navigate to the homepage with the hash
+      // If on another page, navigate to the homepage with the hash
       router.push(`/#${sectionId}`);
     }
   };
@@ -56,19 +56,36 @@ const Navbar = () => {
 
         {/* Center: Navigation Links */}
         <div className="hidden md:flex items-center space-x-8 text-white text-sm font-medium animate-fade-in transition-all duration-700 ease-smooth" style={{ animationDelay: '0.3s' }}>
-          <button onClick={() => scrollToSection('how-it-works')} className="relative group py-2 hover:text-finance-gold transition-colors duration-300">
+          {/* Added suppressHydrationWarning to fix the error */}
+          <button
+            suppressHydrationWarning={true}
+            onClick={() => scrollToSection('how-it-works')}
+            className="relative group py-2 hover:text-finance-gold transition-colors duration-300"
+          >
             How it works
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-finance-gold transition-all duration-300 group-hover:w-full"></span>
           </button>
-          <button onClick={() => scrollToSection('features')} className="relative group py-2 hover:text-finance-gold transition-colors duration-300">
+          <button
+            suppressHydrationWarning={true}
+            onClick={() => scrollToSection('features')}
+            className="relative group py-2 hover:text-finance-gold transition-colors duration-300"
+          >
             Features
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-finance-gold transition-all duration-300 group-hover:w-full"></span>
           </button>
-          <button onClick={() => scrollToSection('faqs')} className="relative group py-2 hover:text-finance-gold transition-colors duration-300">
+          <button
+            suppressHydrationWarning={true}
+            onClick={() => scrollToSection('faqs')}
+            className="relative group py-2 hover:text-finance-gold transition-colors duration-300"
+          >
             FAQs
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-finance-gold transition-all duration-300 group-hover:w-full"></span>
           </button>
-          <button onClick={() => scrollToSection('contact')} className="relative group py-2 hover:text-finance-gold transition-colors duration-300">
+          <button
+            suppressHydrationWarning={true}
+            onClick={() => scrollToSection('footer')} // Corrected this to 'footer' as per our previous conversation
+            className="relative group py-2 hover:text-finance-gold transition-colors duration-300"
+          >
             Contact us
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-finance-gold transition-all duration-300 group-hover:w-full"></span>
           </button>
