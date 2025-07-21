@@ -1,13 +1,14 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation'; // Import hooks
+import Image from 'next/image';
+import { useRouter, usePathname } from 'next/navigation';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const router = useRouter(); // Initialize router
-  const pathname = usePathname(); // Get current path
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,14 +22,12 @@ const Navbar = () => {
   }, []);
 
   const scrollToSection = (sectionId: string) => {
-    // If we are on the homepage, scroll smoothly
     if (pathname === '/') {
       const element = document.getElementById(sectionId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      // If on another page, navigate to the homepage with the hash
       router.push(`/#${sectionId}`);
     }
   };
@@ -40,13 +39,14 @@ const Navbar = () => {
         ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
     >
       <div className="w-full px-6 py-3 flex items-center justify-between">
-        {/* Left: Logo + Saveora */}
         <div className="flex items-center group animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <Link href="/" className="flex items-center">
-            <img
+            <Image
               src="/logo.png"
               alt="Logo"
-              className="h-12 w-12 rounded-xl object-cover transition-transform duration-300 group-hover:scale-110 group-hover:rotate-180"
+              width={48}
+              height={48}
+              className="rounded-xl object-cover transition-transform duration-300 group-hover:scale-110 group-hover:rotate-180"
             />
             <span className="ml-3 text-xl font-bold text-white group-hover:text-finance-gold transition-colors duration-300">
               Saveora
@@ -54,9 +54,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Center: Navigation Links */}
         <div className="hidden md:flex items-center space-x-8 text-white text-sm font-medium animate-fade-in transition-all duration-700 ease-smooth" style={{ animationDelay: '0.3s' }}>
-          {/* Added suppressHydrationWarning to fix the error */}
           <button
             suppressHydrationWarning={true}
             onClick={() => scrollToSection('how-it-works')}
@@ -83,7 +81,7 @@ const Navbar = () => {
           </button>
           <button
             suppressHydrationWarning={true}
-            onClick={() => scrollToSection('footer')} // Corrected this to 'footer' as per our previous conversation
+            onClick={() => scrollToSection('footer')}
             className="relative group py-2 hover:text-finance-gold transition-colors duration-300"
           >
             Contact us
@@ -91,7 +89,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Right: Login + Signup */}
         <div className="flex items-center gap-x-3 animate-fade-in transition-all duration-700 ease-smooth" style={{ animationDelay: '0.5s' }}>
           <Link href="/auth?type=login">
             <button className="group bg-gradient-gold text-finance-black text-sm font-semibold px-5 py-2.5 rounded-full shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105 flex items-center gap-2">

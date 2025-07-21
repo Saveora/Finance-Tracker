@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import LoginForm from '../../components/auth/LoginForm';
 import RegisterForm from '../../components/auth/RegisterForm';
@@ -53,10 +54,10 @@ function AuthFormSwitcher() {
             exit="hidden"
             className="w-full flex justify-center items-center mt-8 mb-4"
           >
-            <a href="/" className="flex items-center space-x-2 hover:scale-105 transition-transform">
+            <Link href="/" className="flex items-center space-x-2 hover:scale-105 transition-transform">
               <Image src="/logo.png" alt="Saveora Logo" width={32} height={32} />
               <span className="text-finance-gold font-bold text-xl">Saveora</span>
-            </a>
+            </Link>
           </motion.div>
         </AnimatePresence>
 
