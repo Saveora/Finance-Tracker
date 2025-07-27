@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+
 const Footer = () => {
   const quickMenu = ["How it works", "Features", "FAQ"];
   const infoMenu = ["Contact Us", "Privacy Policy", "Terms"];

@@ -81,11 +81,13 @@ const Navbar = () => {
           </button>
           <button
             suppressHydrationWarning={true}
-            onClick={() => scrollToSection('footer')}
+            onClick={() => scrollToSection('')}
             className="relative group py-2 hover:text-finance-gold transition-colors duration-300"
           >
+            <Link href="/contact" className="relative group py-2 hover:text-finance-gold transition-colors duration-300">
             Contact us
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-finance-gold transition-all duration-300 group-hover:w-full"></span>
+            </Link>
           </button>
         </div>
 

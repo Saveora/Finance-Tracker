@@ -26,8 +26,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      {/* Navbar is no longer here */}
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+      </body>
     </html>
   );
 }

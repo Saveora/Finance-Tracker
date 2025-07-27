@@ -101,7 +101,7 @@ export default function RegisterForm() {
       <motion.div variants={itemVariants} className="flex items-center mb-5 text-sm text-gray-400">
         <input type="checkbox" className="accent-finance-gold mr-2" />
         <span>
-          I agree to the <a href="#" className="text-finance-gold hover:underline">Terms of Service</a> and <a href="#" className="text-finance-gold hover:underline">Privacy Policy</a>
+          I agree to the <a href="#" className="text-finance-gold hover:underline">Terms & Condition</a> and <a href="#" className="text-finance-gold hover:underline">Privacy Policy</a>
         </span>
       </motion.div>
 
@@ -122,8 +122,6 @@ export default function RegisterForm() {
       <motion.div variants={itemVariants} className="flex justify-center space-x-5">
   {[
     { icon: 'google', bg: 'bg-white', hover: 'hover:bg-[#DB4437]' },
-    { icon: 'facebook', bg: 'bg-[#3b5998]', hover: 'hover:bg-[#1877F2]' },
-    { icon: 'github', bg: 'bg-black', hover: 'hover:bg-[#111]' }
   ].map(({ icon, bg, hover }, idx) => (
     <a
       key={idx}

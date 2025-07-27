@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ContainerScroll } from "@/components/ui/container-scroll-animation"; // Make sure path is correct
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -35,7 +36,7 @@ export default function HeroSection() {
         >
           <span className="block text-white">Take control of your</span>
           <span className="block bg-gradient-to-r from-finance-gold to-finance-gold-light bg-clip-text text-transparent">
-            finances — with Saveora
+            finances - with Saveora
           </span>
         </h1>
 
@@ -78,21 +79,23 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div 
-        className={`mt-20 flex justify-center relative z-10 transition-all duration-1200 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
-        }`}
-        style={{ transitionDelay: '1s' }}
-      >
-        <div className="group w-full max-w-5xl rounded-3xl overflow-hidden border border-finance-navy/30 transition-all duration-500 hover:border-finance-gold/50 hover:scale-[1.02] hover:shadow-glow">
-          <Image
+      {/* Scroll Animation */}
+      <div className="mt-40 relative z-30">
+        <ContainerScroll
+          titleComponent={
+          <h2 className="text-6xl font-bold text-center">
+            <span className="text-white">Smart Tracking, </span>
+            <span className="text-finance-gold">Smarter Savings</span>
+            </h2>
+            }
+
+        >
+          <img
             src="/dashboard-preview.png"
             alt="Saveora Dashboard Preview"
-            width={1440}
-            height={720}
-            className="w-full h-auto object-cover"
+            className="w-full h-full object-contain"
           />
-        </div>
+        </ContainerScroll>
       </div>
     </section>
   );

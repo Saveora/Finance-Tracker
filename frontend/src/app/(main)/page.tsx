@@ -7,7 +7,6 @@ import HeroSection from "../../components/HeroSection";
 import FeaturesSection from "@/components/Features";
 import FaqAccordion from "@/components/FaqAccordion";
 import SmartBanner from "../../components/SmartBanner";
-import Footer from "../../components/Footer";
 
 export default function Home() {
   const hash: string | null = typeof window !== 'undefined' ? window.location.hash : null;
@@ -42,7 +41,6 @@ export default function Home() {
       <section id="features"><FeaturesSection /></section>
       <section id="faqs"><FaqAccordion /></section>
       <section id="smartbanner"><SmartBanner /></section>
-      <section id="footer"><Footer /></section>
       </div>
   
   );

@@ -100,8 +100,6 @@ export default function LoginForm() {
      <motion.div variants={itemVariants} className="flex justify-center space-x-5">
   {[
     { icon: 'google', bg: 'bg-white', hover: 'hover:bg-[#DB4437]' },
-    { icon: 'facebook', bg: 'bg-[#3b5998]', hover: 'hover:bg-[#1877F2]' },
-    { icon: 'github', bg: 'bg-black', hover: 'hover:bg-[#111]' }
   ].map(({ icon, bg, hover }, idx) => (
     <a
       key={idx}

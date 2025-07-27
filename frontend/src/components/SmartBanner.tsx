@@ -27,7 +27,7 @@ const SmartBanner = () => {
   }, []);
 
   return (
-     <section className="relative bg-[#030917] text-white pt-32 pb-24 overflow-hidden">
+     <section className="relative bg-[#030917] text-white pt-16 pb-16 overflow-hidden">
     <div 
       ref={bannerRef}
       className="relative max-w-6xl mx-auto my-24 px-6"
