@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation'; // Keep next/navigation hooks
 import HowItWorks from "../../components/HowItWorks";
 import HeroSection from "../../components/HeroSection";
 import FeaturesSection from "@/components/Features";

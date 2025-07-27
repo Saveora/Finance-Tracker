@@ -11,14 +11,14 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative bg-[#030917] text-white pt-32 pb-24 overflow-hidden">
+    <section className="relative bg-[#030917] text-white pt-36 pb-24 overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[60%] w-[600px] h-[600px] bg-finance-gold opacity-5 blur-[150px] rounded-full animate-glow-pulse"></div>
       </div>
 
       <div className="relative max-w-6xl mx-auto px-6 text-center z-10">
         <div 
-          className={`inline-block mb-6 transition-all duration-1000 ease-out ${
+          className={`inline-block mb-8 transition-all duration-1000 ease-out ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
           style={{ transitionDelay: '0.2s' }}
@@ -29,7 +29,7 @@ export default function HeroSection() {
         </div>
 
         <h1 
-          className={`text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-8 transition-all duration-1000 ease-out ${
+          className={`text-5xl md:text-6xl lg:text-6xl font-bold leading-tight mb-10 transition-all duration-1000 ease-out ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
           style={{ transitionDelay: '0.4s' }}
@@ -41,7 +41,7 @@ export default function HeroSection() {
         </h1>
 
         <p 
-          className={`text-gray-300 max-w-2xl mx-auto mb-10 text-xs md:text-base leading-relaxed transition-all duration-1000 ease-out ${
+          className={`text-gray-300 max-w-2xl mx-auto mb-12 text-xs md:text-base leading-relaxed transition-all duration-1000 ease-out ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
           style={{ transitionDelay: '0.6s' }}

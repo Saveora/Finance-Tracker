@@ -141,13 +141,6 @@ export default function ContactPage() {
             </button>
           </form>
         </div>
-
-        {/* CTA Below Form */}
-        <div className="mt-6 text-center">
-          <button className="text-sm underline text-gray-400 hover:text-white transition">
-            Use for free
-          </button>
-        </div>
       </main>
 
       {/* Toast Notifications */}
