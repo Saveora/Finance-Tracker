@@ -111,7 +111,7 @@ export default function FaqAccordion() {
   }, []);
 
   return (
-    <div id="faqs" ref={ref} className="min-h-screen bg-[#030917] text-white px-6 py-13 md:px-20 relative overflow-hidden">
+    <div id="faqs" ref={ref} className="min-h-screen bg-[#030917] text-white px-6 py-24 md:px-20 relative overflow-hidden">
       <div className="absolute inset-0">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
