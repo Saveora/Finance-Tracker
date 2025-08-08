@@ -115,6 +115,7 @@ export default function SpentChart() {
               <span className={`text-xs mt-2 font-semibold ${isSelected ? "text-blue-700" : "text-black-400"}`}>
                 {bar.month}
               </span>
+
             </div>
           );
         })}
