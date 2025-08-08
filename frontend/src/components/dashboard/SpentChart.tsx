@@ -1,46 +1,124 @@
 // src/components/dashboard/SpentChart.tsx
+'use client';
+
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+
+// Helper component to safely format numbers on the client
+function ClientFormattedNumber({ amount }: { amount: number }) {
+  const [formattedAmount, setFormattedAmount] = useState<string>(amount.toString());
+
+  useEffect(() => {
+    // This effect runs only on the client, after hydration
+    setFormattedAmount(amount.toLocaleString('en-IN'));
+  }, [amount]);
+
+  return <>{formattedAmount}</>;
+}
+
+const BAR_DATA = [
+  { month: "Jan", amount: 80892 }, { month: "Feb", amount: 89500 },
+  { month: "Mar", amount: 101245 }, { month: "Apr", amount: 115000 },
+  { month: "May", amount: 92500 }, { month: "Jun", amount: 82000 },
+  { month: "Jul", amount: 89492 }, { month: "Aug", amount: 90000 },
+  { month: "Sep", amount: 47000 }, { month: "Oct", amount: 65886 },
+  { month: "Nov", amount: 81000 }, { month: "Dec", amount: 85000 }
+];
+const CURRENT_YEAR = '25';
+
+// Dynamically get the current month's short name
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const currentMonthName = monthNames[new Date().getMonth()];
+
 export default function SpentChart() {
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
+  // Initialize state with the current month's name
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthName);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownRef]);
+  
+  const maxAmount = Math.max(...BAR_DATA.map(d => d.amount));
+
   return (
-    <div className="bg-white rounded-xl p-6 shadow flex flex-col">
+    <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-sky-500">
+      
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-lg">Spent Analysis</h2>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
-            <span className="text-xs text-gray-500">Spent Trend</span>
-          </span>
-          <select className="ml-4 bg-gray-100 rounded-md px-3 py-1 text-xs font-medium">
-            <option>This Month</option>
-          </select>
+        <h2 className="font-semibold text-lg text-gray-800">Spent Analysis</h2>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2 bg-gray-100 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+          >
+            {selectedMonth}
+            <ChevronDown size={16} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {isDropdownOpen && (
+            <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-lg shadow-xl z-20 border">
+              {BAR_DATA.map(item => (
+                <button
+                  key={item.month}
+                  onClick={() => {
+                    setSelectedMonth(item.month);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  {item.month}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-      {/* Simulated chart - for pixel-perfect, replace with recharts/BarChart if available */}
-      <div className="w-full h-56 flex items-end gap-3">
-        {/* Render 12 bars matching the image */}
-        {[
-          80, 90, 95, 75, 90, 70, 92, 65, 70, 88, 80, 90  // Simulate proportions
-        ].map((height, i) => (
-          <div
-            key={i}
-            className={`flex-1 flex flex-col items-center`}
-          >
-            <div className={`relative w-6 rounded-md
-                ${i === 6 ? 'bg-gradient-to-t from-blue-800 to-blue-400' : 'bg-blue-300'}
-              `}
-              style={{ height: `${height}%`, minHeight: '1.2rem' }}>
-              {i === 6 && (
-                <span className="absolute left-1/2 -top-8 -translate-x-1/2 px-2 py-1 bg-[#101728] text-white text-xs rounded shadow">
-                  $89,492 July '25
+
+      <div className="w-full h-64 flex items-end justify-between mt-10">
+        {BAR_DATA.map((bar) => {
+          const barHeight = `${Math.max(10, (bar.amount / maxAmount) * 100)}%`;
+          const isSelected = bar.month === selectedMonth;
+          const isHovered = hoveredBar === bar.month;
+
+          return (
+            <div
+              key={bar.month}
+              className="h-full w-8 flex flex-col items-center justify-end cursor-pointer group"
+              onMouseEnter={() => setHoveredBar(bar.month)}
+              onMouseLeave={() => setHoveredBar(null)}
+            >
+              <div
+                className={`relative w-full flex justify-center transition-opacity duration-300 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <span className="absolute bottom-2 px-2 py-1 bg-[#101728] text-white text-xs rounded-md shadow-lg whitespace-nowrap z-10">
+                  ₹<ClientFormattedNumber amount={bar.amount} /> {bar.month} '{CURRENT_YEAR}
                 </span>
-              )}
+              </div>
+              
+              <div
+                className={`w-7 rounded-md transition-all duration-300 group-hover:bg-blue-500 ${
+                  isSelected ? 'bg-gradient-to-t from-blue-800 to-blue-400' : 'bg-blue-300'
+                }`}
+                style={{ height: barHeight }}
+              />
+
+              <span className={`text-xs mt-2 font-semibold ${isSelected ? "text-blue-700" : "text-black-400"}`}>
+                {bar.month}
+              </span>
             </div>
-            <div className="text-xs text-gray-400 mt-2">
-              {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][i]}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
-
