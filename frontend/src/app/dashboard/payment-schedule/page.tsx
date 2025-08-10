@@ -1,3 +1,4 @@
+
 // app/dashboard/payment-schedule/page.tsx
 'use client';
 

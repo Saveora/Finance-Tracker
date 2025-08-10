@@ -1,3 +1,4 @@
+
 // src/app/dashboard/layout.tsx
 import type { ReactNode } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -12,5 +13,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {children}
       </main>
     </div>
+
   );
 }
