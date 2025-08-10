@@ -71,7 +71,7 @@ export default function TransferLayout() {
       <main className="flex-1 py-10 px-10">
         <div className="max-w-6xl mx-auto">
           <header className="mb-8">
-            <h1 className="text-3xl font-extrabold text-slate-900">Payment Transfer</h1>
+            <h1 className="text-3xl font-extrabold text-slate-900">Transfer Funds</h1>
             <p className="text-sm text-slate-500 mt-1">Send money quickly and securely. Use saved accounts or UPI.</p>
           </header>
 
