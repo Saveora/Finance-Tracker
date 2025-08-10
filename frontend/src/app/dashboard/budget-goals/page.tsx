@@ -1,12 +1,13 @@
-// src/app/dashboard/budgetgoals/page.tsx
-import Header from '@/components/dashboard/Header';
+// app/dashboard/budget-goals/page.tsx
+'use client';
 
-export default function BudgetGoalsPage() {
+import React from 'react';
+import BudgetLayout from '@/components/BudgetGoals/BudgetLayout';
+
+export default function Page() {
   return (
-    <>
-      <Header />
-      <div className="text-2xl font-semibold mt-6">Budget Goals</div>
-      {/* Optionally add chart components, analysis details, etc */}
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <BudgetLayout />
+    </div>
   );
 }

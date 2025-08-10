@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Home,
   Calendar,
@@ -150,15 +151,24 @@ export default function Sidebar() {
   const path = usePathname();
 
   return (
-    <aside className="w-[240px] min-w-[240px] h-screen bg-[#101728] flex flex-col justify-between fixed left-0 top-0 z-20">
+    <aside className="w-[240px] min-w-[240px] h-screen bg-[#071029] flex flex-col justify-between fixed left-0 top-0 z-20">
       <div>
-        <div className="flex items-center gap-2 px-3 pt-4 pb-8">
-          <div className="w-10 h-10 bg-[#15203A] rounded-full flex items-center justify-center">
-            <span className="text-yellow-400 text-2xl font-bold">S</span>
-          </div>
-          <span className="text-xl font-semibold text-white tracking-wide">
-            Saveora
-          </span>
+        <div className="flex items-center gap-2 px-0 pt-6 pb-5">
+<div className="flex items-center gap-3 px-3">
+  <div className="w-10 h-10 relative">
+    <Image
+      src="/logo.png"
+      alt="Saveora Logo"
+      layout="fill"
+      objectFit="contain"
+      priority
+    />
+  </div>
+  <span className="text-2xl font-semibold text-white tracking-wide">
+    Saveora
+  </span>
+</div>
+
         </div>
         <nav className="flex flex-col gap-1 px-2 select-none">
           {navItems.map(({ label, href, icon }) => {

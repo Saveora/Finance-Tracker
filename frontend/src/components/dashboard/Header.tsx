@@ -42,7 +42,7 @@ export default function Header() {
 
   return (
     <div className="flex items-center justify-between relative z-30 bg-inherit">
-      <h1 className="text-2xl font-bold">Welcome !</h1>
+      <h1 className="text-3xl font-extrabold">Welcome !</h1>
       <div className="flex items-center gap-4">
         {/* SEARCH */}
         <div ref={searchRef} className="relative">

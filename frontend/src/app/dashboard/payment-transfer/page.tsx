@@ -1,11 +1,12 @@
-import Header from '@/components/dashboard/Header';
+// app/dashboard/payment-transfer/page.tsx
+'use client';
 
-export default function PaymentTransferPage() {
+import TransferLayout from '@/components/TransferFunds/TransferLayout';
+
+export default function Page() {
   return (
-    <>
-      <Header />
-      <div className="text-2xl font-semibold mt-6">Payment Transfer</div>
-      {/* Optionally add chart components, analysis details, etc */}
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <TransferLayout />
+    </div>
   );
 }

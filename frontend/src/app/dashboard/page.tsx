@@ -7,7 +7,7 @@ import PaymentSchedule from '@/components/dashboard/PaymentSchedule';
 import BudgetGoals from '@/components/dashboard/BudgetGoals';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import Header from '@/components/dashboard/Header';
-import { DollarSign, Wallet } from 'lucide-react';
+import { DollarSign, IndianRupee, Wallet } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
@@ -24,7 +24,7 @@ export default function DashboardPage() {
               <StatCard
                 title="Deposits"
                 amount="₹3,00,000.00"
-                icon={<DollarSign size={28} />}
+                icon={<IndianRupee size={28} />}
                 iconBgColor="bg-sky-100"
                 iconTextColor="text-sky-600"
                 borderColor="border-t-sky-500"
@@ -32,7 +32,7 @@ export default function DashboardPage() {
               <StatCard
                 title="Spent"
                 amount="₹35,102.00"
-                icon={<DollarSign size={28} />}
+                icon={<IndianRupee size={28} />}
                 iconBgColor="bg-orange-100"
                 iconTextColor="text-orange-600"
                 borderColor="border-t-orange-500"

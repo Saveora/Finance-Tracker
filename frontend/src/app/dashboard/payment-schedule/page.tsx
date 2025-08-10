@@ -1,12 +1,12 @@
-// src/app/dashboard/paymentschdeule/page.tsx
-import Header from '@/components/dashboard/Header';
+// app/dashboard/payment-schedule/page.tsx
+'use client';
 
-export default function PaymentSchedulePage() {
+import ScheduleLayout from '@/components/PaymentSchedule/ScheduleLayout';
+
+export default function Page() {
   return (
-    <>
-      <Header />
-      <div className="text-2xl font-semibold mt-6">Payment Schedule</div>
-      {/* Optionally add chart components, analysis details, etc */}
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <ScheduleLayout />
+    </div>
   );
 }
