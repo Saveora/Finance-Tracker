@@ -33,11 +33,11 @@ export default function VirtualCard() {
             <div className="relative z-10 flex justify-between items-end">
                 {/* Left side: All text details */}
                 <div>
-                    <p className="font-mono tracking-wider text-lg">6764 4354 2344 3245</p>
+                    <p className="font-mono tracking-wider text-sm">6764 4354 2344 3245</p>
                     <div className="flex items-center gap-4 mt-1">
                         <p className="text-xs font-semibold uppercase">DIPTESH SINGH</p>
                         <div className="text-left">
-                            <span className="text-[10px] font-extralight block leading-none">VALID THRU</span>
+                            <span className="text-[10px] font-extralight block leading-none">VALID TILL</span>
                             <span className="text-sm font-semibold">09/24</span>
                         </div>
                     </div>

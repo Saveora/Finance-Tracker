@@ -55,7 +55,7 @@ export default function RecentTransactions() {
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-purple-500">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-lg text-gray-800">Recent Transactions</h2>
+        <h2 className="font-semibold text-lg text-gray-800">Transaction History</h2>
         <a href="/dashboard/transactions" className="text-sm text-sky-600 hover:text-sky-800 font-semibold transition-colors">
           View All
         </a>
