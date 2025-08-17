@@ -4,14 +4,17 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,          -- login/display name
   email TEXT UNIQUE NOT NULL,
   email_verified BOOLEAN DEFAULT false,
-  name TEXT NOT NULL,
+  first_name TEXT NOT NULL,               -- store separately
+  last_name TEXT NOT NULL,                -- store separately
   phone TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   deleted_at TIMESTAMPTZ
 );
+
 
 CREATE TABLE IF NOT EXISTS auth_credentials (
   id BIGSERIAL PRIMARY KEY,
@@ -41,5 +44,5 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   revoked BOOLEAN DEFAULT false
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id);

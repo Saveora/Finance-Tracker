@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import { Bell, Search, ChevronDown, User } from "lucide-react";
+import useUser from "@/hooks/useUser";
+import { useRouter } from "next/navigation";
 
-// ✅ Fix: Allow `ref.current` to be `null`
 function useClickOutside(
   ref: React.RefObject<HTMLElement | null>,
   handler: () => void
@@ -24,12 +25,12 @@ export default function Header() {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const router = useRouter();
 
   const searchRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
-  // ✅ These are now type-correct
   useClickOutside(searchRef, () => setShowSearch(false));
   useClickOutside(notifRef, () => setShowNotifications(false));
   useClickOutside(userRef, () => setShowUserMenu(false));
@@ -40,9 +41,33 @@ export default function Header() {
     if (showSearch) searchInputRef.current?.focus();
   }, [showSearch]);
 
+  const { user, loading } = useUser();
+
+  async function handleSignOut() {
+    try {
+      await fetch("http://localhost:5000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      localStorage.removeItem("accessToken");
+      router.push("/auth?type=login");
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  }
+
   return (
     <div className="flex items-center justify-between relative z-30 bg-inherit">
-      <h1 className="text-3xl font-extrabold">Welcome !</h1>
+      <h1 className="text-3xl font-extrabold">
+        Welcome{" "}
+        {loading
+          ? "..."
+          : user
+          ? `${user.firstName} ${user.lastName}`
+          : "Guest"}
+        !
+      </h1>
+
       <div className="flex items-center gap-4">
         {/* SEARCH */}
         <div ref={searchRef} className="relative">
@@ -105,12 +130,19 @@ export default function Header() {
             className="flex items-center gap-2 bg-[#f7f7f8] py-1.5 px-4 rounded-full border transition min-w-[124px]"
             onClick={() => setShowUserMenu((v) => !v)}
           >
-            <span className="text-sm font-medium">Diptesh</span>
+            <span className="text-sm font-medium">
+              {loading
+                ? "..."
+                : user
+                ? `${user.firstName} ${user.lastName}`
+                : "Guest"}
+            </span>
             <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border overflow-hidden">
               <User className="w-6 h-6 text-gray-400" />
             </span>
             <ChevronDown className="w-5 h-5 text-gray-500" />
           </button>
+
           <div
             className={`absolute right-0 mt-3 w-80 bg-[#101728] rounded-xl p-7 shadow-2xl z-50 text-white border border-[#31343a]
               transition-opacity duration-200 ease-in-out
@@ -122,15 +154,18 @@ export default function Header() {
           >
             <div className="flex flex-col items-center mb-7">
               <div className="w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center mb-2 text-3xl font-bold select-none">
-                J
+                {user?.firstName ? user.firstName[0].toUpperCase() : "?"}
               </div>
-              <div className="text-sm font-medium">
-                jaykrishanpatra07@gmail.com
+              <div className="text-sm font-medium">{user?.email}</div>
+              <div className="text-lg font-bold mt-2">
+                Hi, {user?.firstName || "User"}!
               </div>
-              <div className="text-lg font-bold mt-2">Hi, Jay Krishan!</div>
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 px-3 py-2 rounded-lg bg-[#18191b] text-white text-base flex items-center justify-center gap-2 border border-white/10">
+              <button
+                onClick={handleSignOut}
+                className="flex-1 px-3 py-2 rounded-lg bg-[#18191b] text-white text-base flex items-center justify-center gap-2 border border-white/10"
+              >
                 <svg
                   viewBox="0 0 24 24"
                   className="w-5 h-5"

@@ -1,10 +1,8 @@
-// index.js
 require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const authRoutes = require('./routes/authRoutes');
-const { runMigrations } = require('./db'); // optional
-const { query } = require('./db');
+const authRoutes = require('./routes/auth');
+const { initDb, runMigrations } = require('./db'); // <- initDb + runMigrations
 
 const app = express();
 
@@ -15,7 +13,7 @@ app.use(helmet());
 // Rate limiting (basic)
 const rateLimit = require('express-rate-limit');
 const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : 60,
   standardHeaders: true,
   legacyHeaders: false,
@@ -26,7 +24,7 @@ app.use(apiLimiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
-// CORS - for local dev allow your frontend origin (set in env)
+// CORS
 const cors = require('cors');
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -49,9 +47,19 @@ const PORT = process.env.PORT || 5000;
 
 (async () => {
   try {
-    // optional migrations (disabled by default - implement runMigrations if you want it)
-    if (process.env.RUN_MIGRATIONS === 'true') {
+    // initialize DB (with default pool options)
+    await initDb();
+
+    // Run migrations automatically in development OR if explicitly requested.
+    // - Runs if NODE_ENV !== 'production' (typical dev) OR if RUN_MIGRATIONS=true
+    // - This is safe for dev; for production prefer RUN_MIGRATIONS=true only with tested migrations.
+    const shouldRunMigrations = process.env.NODE_ENV !== 'production' || process.env.RUN_MIGRATIONS === 'true';
+    if (shouldRunMigrations) {
+      console.log('Running DB migrations...');
       await runMigrations();
+      console.log('Migrations finished.');
+    } else {
+      console.log('Skipping automatic migrations (production mode).');
     }
 
     app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
