@@ -1,5 +1,7 @@
 // src/app/dashboard/page.tsx
+'use client';
 
+import useUser from '@/hooks/useUser';
 import StatCard from '@/components/dashboard/StatCard';
 import VirtualCard from '@/components/dashboard/VirtualCard';
 import SpentChart from '@/components/dashboard/SpentChart';
@@ -7,15 +9,31 @@ import PaymentSchedule from '@/components/dashboard/PaymentSchedule';
 import BudgetGoals from '@/components/dashboard/BudgetGoals';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import Header from '@/components/dashboard/Header';
-import { DollarSign, IndianRupee, Wallet } from 'lucide-react';
+import { IndianRupee, Wallet } from 'lucide-react';
 
 export default function DashboardPage() {
+  const { user, loading } = useUser();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8f9fb] flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  // Middleware already blocks unauthenticated users.
+  // If we still have no user here, just render nothing or fallback UI.
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-[#F8f9fb]">
       <main className="flex-1 flex flex-col">
         <Header />
 
-        {/* Main Grid for the final Asymmetrical Layout */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 items-start">
           
           {/* == LEFT COLUMN (2/3 width) == */}

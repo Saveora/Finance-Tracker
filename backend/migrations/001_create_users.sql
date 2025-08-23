@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS auth_credentials (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   password_hash TEXT NOT NULL,            -- argon2 hash
+  reset_password_token TEXT,
+  reset_password_expires TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

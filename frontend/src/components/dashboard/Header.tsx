@@ -1,3 +1,4 @@
+// components/dashboard/Header.tsx
 "use client";
 
 import Link from "next/link";
@@ -5,6 +6,7 @@ import { useRef, useState, useEffect } from "react";
 import { Bell, Search, ChevronDown, User } from "lucide-react";
 import useUser from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
+import { clearAccessToken } from "@/lib/auth";
 
 function useClickOutside(
   ref: React.RefObject<HTMLElement | null>,
@@ -45,11 +47,12 @@ export default function Header() {
 
   async function handleSignOut() {
     try {
-      await fetch("http://localhost:5000/auth/logout", {
+      // NOTE: server logout route is POST /logout (not /auth/logout) because you mount auth routes at '/'
+      await fetch("http://localhost:5000/logout", {
         method: "POST",
         credentials: "include",
       });
-      localStorage.removeItem("accessToken");
+      clearAccessToken();
       router.push("/auth?type=login");
     } catch (err) {
       console.error("Logout failed", err);
@@ -63,13 +66,13 @@ export default function Header() {
         {loading
           ? "..."
           : user
-          ? `${user.firstName} ${user.lastName}`
+          ? `${user.first_name} ${user.last_name}`
           : "Guest"}
         !
       </h1>
 
       <div className="flex items-center gap-4">
-        {/* SEARCH */}
+         {/* SEARCH */}
         <div ref={searchRef} className="relative">
           <button
             aria-label="Search"
@@ -122,8 +125,6 @@ export default function Header() {
             </div>
           </div>
         </div>
-
-        {/* USER MENU */}
         <div ref={userRef} className="relative">
           <button
             aria-label="Open user menu"
@@ -134,7 +135,7 @@ export default function Header() {
               {loading
                 ? "..."
                 : user
-                ? `${user.firstName} ${user.lastName}`
+                ? `${user.first_name} ${user.last_name}`
                 : "Guest"}
             </span>
             <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border overflow-hidden">
@@ -154,11 +155,11 @@ export default function Header() {
           >
             <div className="flex flex-col items-center mb-7">
               <div className="w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center mb-2 text-3xl font-bold select-none">
-                {user?.firstName ? user.firstName[0].toUpperCase() : "?"}
+                {user?.first_name ? user.first_name[0].toUpperCase() : "?"}
               </div>
               <div className="text-sm font-medium">{user?.email}</div>
               <div className="text-lg font-bold mt-2">
-                Hi, {user?.firstName || "User"}!
+                Hi, {user?.first_name || "User"}!
               </div>
             </div>
             <div className="flex gap-3">

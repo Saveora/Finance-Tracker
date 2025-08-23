@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import LoginForm from '../../components/auth/LoginForm';
 import RegisterForm from '../../components/auth/RegisterForm';
+import ForgotPasswordForm from '../../components/auth/ForgotPasswordForm';
 import Image from 'next/image';
 
 function AuthFormSwitcher() {
@@ -17,6 +18,7 @@ function AuthFormSwitcher() {
     router.push(`?type=${target}`, { scroll: false });
   };
 
+  // Simple direction multiplier for slide animations (keeps behavior similar to before)
   const direction = type === 'signup' ? 1 : -1;
 
   const formVariants: Variants = {
@@ -47,7 +49,7 @@ function AuthFormSwitcher() {
       <div className="relative w-full max-w-md bg-[#06142e] rounded-3xl shadow-elegant overflow-hidden border border-finance-navy/50">
         <AnimatePresence mode="wait">
           <motion.div
-            key={type}
+            key={`logo-${type}`}
             variants={logoVariants}
             initial="hidden"
             animate="visible"
@@ -74,6 +76,26 @@ function AuthFormSwitcher() {
               <RegisterForm />
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-400">Already have an account?</p>
+                <button
+                  onClick={() => switchTo('login')}
+                  className="mt-1 font-semibold text-finance-gold hover:text-finance-gold-light transition-all"
+                >
+                  Login
+                </button>
+              </div>
+            </motion.div>
+          ) : type === 'forgot' ? (
+            <motion.div
+              key="forgot"
+              variants={formVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-8 sm:p-12 pt-4"
+            >
+              <ForgotPasswordForm />
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-400">Remembered your password?</p>
                 <button
                   onClick={() => switchTo('login')}
                   className="mt-1 font-semibold text-finance-gold hover:text-finance-gold-light transition-all"

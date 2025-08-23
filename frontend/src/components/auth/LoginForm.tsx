@@ -1,3 +1,4 @@
+// components/auth/LoginForm.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -5,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, Variants } from 'framer-motion';
 import { FaUserAlt, FaLock } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { setAccessToken } from '@/lib/auth';
 
 const containerVariants : Variants= {
   hidden: { opacity: 0, scale: 0.95 },
@@ -33,10 +35,12 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // NOTE: storing access token in memory is safer than localStorage.
-  // For demo we place it on window, but in real app use React Context.
+  // Save access token centrally. We store in localStorage for persistence.
+  // Security note: localStorage is easier but can be exposed by XSS;
+  // for more secure apps, you can keep access token in memory and refresh via httpOnly cookie.
   function saveAccessToken(token: string) {
-    // small example - keep in memory only
+    setAccessToken(token);
+    // keep in-memory pointer for quick usage (optional)
     (window as any).__ACCESS_TOKEN__ = token;
   }
 
@@ -59,25 +63,32 @@ export default function LoginForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // show backend-provided message if any
         setError((data && data.error) || (data && data.message) || 'Login failed');
         setLoading(false);
         return;
       }
 
-      // successful login: server sets refresh_token cookie and returns accessToken in JSON
+      // successful login: server sets refresh_token cookie and returns accessToken + user info in JSON
       const accessToken = data && data.accessToken;
+      const user = data && data.user;
+
       if (!accessToken) {
         setError('Login succeeded but no access token returned');
         setLoading(false);
         return;
       }
 
-      // store token in-memory (or via Context) and redirect
+      // store access token (and optionally use user info)
       saveAccessToken(accessToken);
 
-      // Optionally: set axios global header or other clients
-      // e.g. axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      // Optionally store user basic info in localStorage for quick UI usage:
+      if (user) {
+        try {
+          localStorage.setItem('me', JSON.stringify(user));
+        } catch (err) {
+          // ignore storage errors
+        }
+      }
 
       // Redirect to dashboard (or desired page)
       router.push('/dashboard');
@@ -141,9 +152,13 @@ export default function LoginForm() {
           <input checked={remember} onChange={(e) => setRemember(e.target.checked)} type="checkbox" className="accent-finance-gold" />
           <span>Remember me</span>
         </label>
-        <a href="#" className="text-finance-gold/80 hover:text-finance-gold hover:underline">
-          Forgot password?
-        </a>
+        <button
+  type="button"
+  onClick={() => router.push('/auth?type=forgot', { scroll: false })}
+  className="text-finance-gold/80 hover:text-finance-gold hover:underline"
+>
+  Forgot password?
+</button>
       </motion.div>
 
       {error && <div className="text-sm text-red-400 mb-3">{error}</div>}
