@@ -57,7 +57,7 @@ export default function LoginForm() {
         },
         // important: sends httpOnly refresh cookie (if present) and allows cookie to be set
         credentials: 'include',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, remember})
       });
 
       const data = await res.json().catch(() => ({}));
