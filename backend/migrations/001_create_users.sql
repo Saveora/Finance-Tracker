@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   refresh_token_hash TEXT NOT NULL,
   device_info TEXT,
   ip INET,
+  is_remember boolean NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now(),
   last_used_at TIMESTAMPTZ DEFAULT now(),
   expires_at TIMESTAMPTZ,

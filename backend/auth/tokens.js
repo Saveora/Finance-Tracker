@@ -5,7 +5,6 @@ const crypto = require('crypto');
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
 const REFRESH_PEPPER = process.env.REFRESH_TOKEN_PEPPER || 'replace_me';
-const REFRESH_EXPIRES_DAYS = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30', 10);
 
 // Ensure required env
 if (!JWT_SECRET) {
@@ -58,9 +57,9 @@ function hashRefreshToken(refreshToken) {
  * Return a JS Date when a refresh token should expire.
  * Exported name matches controller's import (refreshExpiresAt).
  */
-function refreshExpiresAt() {
+function refreshExpiresAt(days) {
   const d = new Date();
-  d.setDate(d.getDate() + REFRESH_EXPIRES_DAYS);
+  d.setDate(d.getDate() + days);
   return d;
 }
 

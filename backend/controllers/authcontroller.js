@@ -21,6 +21,9 @@ function errRes(res, status = 400, message = "Bad Request") {
   return res.status(status).json({ ok: false, error: message });
 }
 
+const shortDays = 1; // e.g., 1 day for non-remember (or use session cookie)
+const longDays = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30', 10); // 30 by default
+
 /**
  * POST /auth/signup
  * Registers user but does NOT log them in
@@ -120,6 +123,10 @@ async function signup(req, res) {
  */
 async function login(req, res) {
   const { email, password } = req.body || {};
+  const { remember = false } = req.body;
+// decide lifetime: short for session, long for remember
+
+
   if (!email || !password)
     return errRes(res, 400, "email and password required");
 
@@ -153,19 +160,27 @@ async function login(req, res) {
     });
     const refreshToken = createRefreshToken();
     const refreshHash = hashRefreshToken(refreshToken);
-    const expiresAt = refreshExpiresAt();
+const expiresAt = refreshExpiresAt( remember ? longDays : shortDays );
 
     await db.query(
-      `INSERT INTO user_sessions (user_id, refresh_token_hash, ip, device_info, expires_at)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [user.id, refreshHash, req.ip || null, req.get("User-Agent") || null, expiresAt]
+      `INSERT INTO user_sessions (user_id, refresh_token_hash, ip, is_remember, device_info, expires_at)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [user.id, refreshHash, req.ip || null, remember, req.get("User-Agent") || null, expiresAt]
     );
 
     // set cookie
     const cookieOpts = {
       ...COOKIE_OPTIONS_BASE,
-      expires: expiresAt,
     };
+
+    if (remember) {
+  cookieOpts.expires = expiresAt; // persistent cookie
+  // optionally set cookieOpts.maxAge = longDays * 24*3600*1000
+} else {
+  // session cookie (omit expires so browser treats it as session cookie)
+  // but we still store a short expiry in DB so server will reject after shortDays
+  // ensure cookieOpts.expires is not set
+}
     res.cookie("refresh_token", refreshToken, cookieOpts);
 
     return res.json({
@@ -198,14 +213,19 @@ async function refresh(req, res) {
 
     const newRefreshToken = createRefreshToken();
     const newHash = hashRefreshToken(newRefreshToken);
-    const newExpires = refreshExpiresAt();
 
+    // fetch is_remember along with session
     const updateRes = await db.query(
       `UPDATE user_sessions
-       SET refresh_token_hash = $1, last_used_at = now(), expires_at = $2
-       WHERE refresh_token_hash = $3 AND revoked = false AND expires_at > now()
-       RETURNING id, user_id`,
-      [newHash, newExpires, oldHash]
+       SET refresh_token_hash = $1, last_used_at = now(), expires_at = CASE 
+            WHEN is_remember THEN now() + ($3 || ' days')::interval
+            ELSE now() + ($4 || ' days')::interval
+         END
+       WHERE refresh_token_hash = $2
+         AND revoked = false
+         AND expires_at > now()
+       RETURNING id, user_id, is_remember, expires_at`,
+      [newHash, oldHash, longDays, shortDays]
     );
 
     if (updateRes.rowCount === 0) {
@@ -213,18 +233,23 @@ async function refresh(req, res) {
     }
 
     const session = updateRes.rows[0];
-    const userRes = await db.query("SELECT id, email FROM users WHERE id=$1", [
-      session.user_id,
-    ]);
+
+    // get user
+    const userRes = await db.query(
+      "SELECT id, email FROM users WHERE id=$1",
+      [session.user_id]
+    );
     if (userRes.rowCount === 0) return errRes(res, 401, "Invalid session");
 
     const user = userRes.rows[0];
     const accessToken = signAccessToken({ sub: user.id, email: user.email });
 
-    const cookieOpts = {
-      ...COOKIE_OPTIONS_BASE,
-      expires: newExpires,
-    };
+    // cookie options
+    const cookieOpts = { ...COOKIE_OPTIONS_BASE };
+    if (session.is_remember) {
+      cookieOpts.expires = session.expires_at; // persistent cookie
+    }
+    // else: session cookie (no expires)
 
     res.cookie("refresh_token", newRefreshToken, cookieOpts);
     return res.json({ ok: true, accessToken });
@@ -233,6 +258,7 @@ async function refresh(req, res) {
     return errRes(res, 500, "Could not refresh token");
   }
 }
+
 
 /**
  * POST /auth/logout
