@@ -1,21 +1,9 @@
 -- =============================
--- USERS (main table)
--- =============================
-CREATE TABLE users (
-    user_id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- =============================
 -- USER PROFILE
 -- =============================
 CREATE TABLE user_profiles (
     profile_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     display_name VARCHAR(100),
     currency VARCHAR(10) DEFAULT 'INR',
     language VARCHAR(50) DEFAULT 'English',
@@ -29,7 +17,7 @@ CREATE TABLE user_profiles (
 -- =============================
 CREATE TABLE connected_accounts (
     account_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     bank_name VARCHAR(100) NOT NULL,
     account_type VARCHAR(50), -- savings/current
     masked_account_no VARCHAR(20),
@@ -41,7 +29,7 @@ CREATE TABLE connected_accounts (
 -- =============================
 CREATE TABLE notification_settings (
     notification_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     transaction_alerts BOOLEAN DEFAULT TRUE,
     promotions BOOLEAN DEFAULT FALSE,
     payment_reminders BOOLEAN DEFAULT TRUE
@@ -52,7 +40,7 @@ CREATE TABLE notification_settings (
 -- =============================
 CREATE TABLE security_settings (
     security_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     two_factor_enabled BOOLEAN DEFAULT FALSE,
     biometric_unlock BOOLEAN DEFAULT FALSE,
     monitor_payments BOOLEAN DEFAULT TRUE
@@ -63,7 +51,7 @@ CREATE TABLE security_settings (
 -- =============================
 CREATE TABLE danger_zone_logs (
     log_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action VARCHAR(50) NOT NULL CHECK (action IN ('delete_account', 'export_data')),
     performed_at TIMESTAMP DEFAULT NOW()
 );
@@ -74,7 +62,7 @@ CREATE TABLE danger_zone_logs (
 CREATE OR REPLACE FUNCTION log_account_deletion()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO danger_zone_logs (user_id, action, performed_at)
+    INSERT INTO danger_zone_logs (id, action, performed_at)
     VALUES (OLD.user_id, 'delete_account', NOW());
     RETURN OLD;
 END;

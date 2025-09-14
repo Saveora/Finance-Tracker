@@ -7,14 +7,13 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT UNIQUE NOT NULL,          -- login/display name
   email TEXT UNIQUE NOT NULL,
   email_verified BOOLEAN DEFAULT false,
-  first_name TEXT NOT NULL,               -- store separately
-  last_name TEXT NOT NULL,                -- store separately
-  phone TEXT NOT NULL UNIQUE,
+  display_name TEXT NOT NULL,               -- store separately
+  phone TEXT UNIQUE,
+  provider TEXT DEFAULT 'local',          -- 'local' or 'google'
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   deleted_at TIMESTAMPTZ
 );
-
 
 CREATE TABLE IF NOT EXISTS auth_credentials (
   id BIGSERIAL PRIMARY KEY,
@@ -25,14 +24,14 @@ CREATE TABLE IF NOT EXISTS auth_credentials (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- CREATE TABLE IF NOT EXISTS social_accounts (
---   id BIGSERIAL PRIMARY KEY,
---   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---   provider TEXT NOT NULL,                 -- 'google'
---   provider_user_id TEXT NOT NULL,         -- provider id
---   provider_data JSONB,
---   UNIQUE(provider, provider_user_id)
--- );
+CREATE TABLE IF NOT EXISTS social_accounts (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,                 -- 'google'
+  provider_user_id TEXT NOT NULL,         -- provider id
+  provider_data JSONB,
+  UNIQUE(provider, provider_user_id)
+  );
 
 CREATE TABLE IF NOT EXISTS user_sessions (
   id BIGSERIAL PRIMARY KEY,
@@ -46,6 +45,5 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   expires_at TIMESTAMPTZ,
   revoked BOOLEAN DEFAULT false
 );
-
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id);

@@ -8,7 +8,7 @@ import { FaUserAlt, FaLock } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { setAccessToken } from '@/lib/auth';
 
-const containerVariants : Variants= {
+const containerVariants: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: {
     opacity: 1,
@@ -21,7 +21,7 @@ const containerVariants : Variants= {
   },
 };
 
-const itemVariants : Variants= {
+const itemVariants: Variants = {
   hidden: { y: 30, opacity: 0 },
   visible: { y: 0, opacity: 1, transition: { duration: 0.4 } },
 };
@@ -35,12 +35,8 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Save access token centrally. We store in localStorage for persistence.
-  // Security note: localStorage is easier but can be exposed by XSS;
-  // for more secure apps, you can keep access token in memory and refresh via httpOnly cookie.
   function saveAccessToken(token: string) {
     setAccessToken(token);
-    // keep in-memory pointer for quick usage (optional)
     (window as any).__ACCESS_TOKEN__ = token;
   }
 
@@ -55,9 +51,8 @@ export default function LoginForm() {
         headers: {
           'Content-Type': 'application/json'
         },
-        // important: sends httpOnly refresh cookie (if present) and allows cookie to be set
         credentials: 'include',
-        body: JSON.stringify({ email, password, remember})
+        body: JSON.stringify({ email, password, remember })
       });
 
       const data = await res.json().catch(() => ({}));
@@ -68,7 +63,6 @@ export default function LoginForm() {
         return;
       }
 
-      // successful login: server sets refresh_token cookie and returns accessToken + user info in JSON
       const accessToken = data && data.accessToken;
       const user = data && data.user;
 
@@ -78,10 +72,8 @@ export default function LoginForm() {
         return;
       }
 
-      // store access token (and optionally use user info)
       saveAccessToken(accessToken);
 
-      // Optionally store user basic info in localStorage for quick UI usage:
       if (user) {
         try {
           localStorage.setItem('me', JSON.stringify(user));
@@ -90,7 +82,6 @@ export default function LoginForm() {
         }
       }
 
-      // Redirect to dashboard (or desired page)
       router.push('/dashboard');
     } catch (err) {
       console.error('Login error', err);
@@ -98,6 +89,11 @@ export default function LoginForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // --- NEW: Google login handler ---
+  function handleGoogleLogin() {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   }
 
   return (
@@ -153,12 +149,12 @@ export default function LoginForm() {
           <span>Remember me</span>
         </label>
         <button
-  type="button"
-  onClick={() => router.push('/auth?type=forgot', { scroll: false })}
-  className="text-finance-gold/80 hover:text-finance-gold hover:underline"
->
-  Forgot password?
-</button>
+          type="button"
+          onClick={() => router.push('/auth?type=forgot', { scroll: false })}
+          className="text-finance-gold/80 hover:text-finance-gold hover:underline"
+        >
+          Forgot password?
+        </button>
       </motion.div>
 
       {error && <div className="text-sm text-red-400 mb-3">{error}</div>}
@@ -179,17 +175,13 @@ export default function LoginForm() {
       </motion.p>
 
       <motion.div variants={itemVariants} className="flex justify-center space-x-5">
-        {[
-          { icon: 'google', bg: 'bg-white', hover: 'hover:bg-[#DB4437]' },
-        ].map(({ icon, bg, hover }, idx) => (
-          <a
-            key={idx}
-            href="#"
-            className={`w-11 h-11 group flex items-center justify-center rounded-full ${bg} text-white text-xl transition-colors ${hover} shadow-md hover:shadow-lg`}
-          >
-            <i className={`bx bxl-${icon} ${icon === 'google' ? 'text-black group-hover:text-white' : ''}`} />
-          </a>
-        ))}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-11 h-11 group flex items-center justify-center rounded-full bg-white text-white text-xl transition-colors hover:bg-[#DB4437] shadow-md hover:shadow-lg"
+        >
+          <i className="bx bxl-google text-black group-hover:text-white" />
+        </button>
       </motion.div>
     </motion.form>
   );
