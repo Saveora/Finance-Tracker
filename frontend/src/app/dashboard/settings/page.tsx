@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import AvatarCard from "@/components/Settings/AvatarCard";
 import ConnectedAccounts from "@/components/Settings/ConnectedAccounts";
-import QuickActions from "@/components/Settings/QuickActions";
 import ProfileForm from "@/components/Settings/ProfileForm";
 import SecurityCard from "@/components/Settings/SecurityCard";
 import DangerZone from "@/components/Settings/DangerZone";
@@ -117,7 +116,7 @@ export default function SettingsPage() {
               <ConnectedAccounts />
             </div>
 
-            <QuickActions />
+           
           </aside>
 
           <section className="col-span-12 lg:col-span-8 space-y-6">

@@ -5,8 +5,7 @@ CREATE TABLE payment_schedules (
     amount NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
     method VARCHAR(50) NOT NULL,           -- e.g., UPI, Card, Bank Transfer
-    payee_name VARCHAR(100),               -- Name of recipient
-    payee_identifier VARCHAR(150),         -- UPI ID / Bank Account
+    payee VARCHAR(100) NOT NULL,               -- Name of recipient,         -- UPI ID / Bank Account
     start_date DATE NOT NULL,
     recurrence VARCHAR(50) NOT NULL,       -- e.g., One-time, Weekly, Monthly, Yearly
     note TEXT,                             -- Optional note
