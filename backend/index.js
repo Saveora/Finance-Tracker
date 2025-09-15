@@ -31,6 +31,10 @@ app.use(cors({
   credentials: true
 }));
 
+// ✅ Google OAuth - add passport
+const passport = require('passport');
+app.use(passport.initialize());
+
 // routes
 app.use('/', authRoutes);
 

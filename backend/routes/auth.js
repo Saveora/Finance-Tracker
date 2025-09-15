@@ -9,7 +9,18 @@ const {
   logout
 } = require('../controllers/authcontroller');
 
-// Public auth routes
+const crypto = require('crypto');
+const argon2 = require('argon2');
+const db = require('../db');
+const { sendPasswordResetEmail } = require('../lib/mailer');
+
+// ✅ Google OAuth dependencies
+const passport = require('passport');
+require('../auth/google'); // loads Google strategy
+
+// ================================
+// Public auth routes (existing)
+// ================================
 router.post('/signup', signup);
 router.post('/login', login);
 
@@ -19,12 +30,9 @@ router.post('/refresh', refresh);
 // Logout (revokes current refresh session cookie)
 router.post('/logout', logout);
 
-// routes/auth.js (Option A - strict)
-const crypto = require('crypto');
-const argon2 = require('argon2');
-const db = require('../db');
-const { sendPasswordResetEmail } = require('../lib/mailer');
-
+// ================================
+// Forgot / Reset Password (existing)
+// ================================
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: 'Missing email' });
@@ -41,31 +49,26 @@ router.post('/forgot-password', async (req, res) => {
     );
 
     if (userRes.rowCount === 0) {
-      // Explicit: user does not exist
       return res.status(404).json({ message: 'No user found with that email' });
     }
 
     const user = userRes.rows[0];
     const userId = user.id;
 
-    // generate token + hashed version
     const rawToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
-    // check for existing auth_credentials row
     const credRes = await db.query(
       `SELECT id FROM auth_credentials WHERE user_id = $1 LIMIT 1`,
       [userId]
     );
 
     if (credRes.rowCount === 0) {
-      // Explicit: credentials missing -> ask to contact support (do NOT auto-create)
       return res.status(500).json({
         message: 'Account credentials not found. Please contact support to reset your password.'
       });
     }
 
-    // update the existing auth_credentials row with reset token + expiry
     await db.query(
       `UPDATE auth_credentials
        SET reset_password_token = $1,
@@ -74,7 +77,6 @@ router.post('/forgot-password', async (req, res) => {
       [hashedToken, userId]
     );
 
-    // send reset email (best effort; don't fail the route if mailer errors)
     const resetUrl = `${process.env.FRONTEND_BASE_URL || 'http://localhost:3000'}/auth/reset-password?token=${rawToken}`;
     try {
       await sendPasswordResetEmail(user.email, resetUrl);
@@ -100,7 +102,6 @@ router.post('/reset-password', async (req, res) => {
   try {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    // Find the auth_credentials row that matches the token and is not expired.
     const credRes = await db.query(
       `SELECT ac.id AS auth_id, ac.user_id
        FROM auth_credentials ac
@@ -116,11 +117,8 @@ router.post('/reset-password', async (req, res) => {
     }
 
     const { auth_id, user_id } = credRes.rows[0];
-
-    // Hash new password with argon2 (recommended)
     const newHash = await argon2.hash(password, { type: argon2.argon2id });
 
-    // Update password hash, clear token and expiry
     await db.query(
       `UPDATE auth_credentials
        SET password_hash = $1,
@@ -130,7 +128,6 @@ router.post('/reset-password', async (req, res) => {
       [newHash, auth_id]
     );
 
-    // Revoke existing sessions (optional but recommended)
     await db.query(
       `UPDATE user_sessions
        SET revoked = true, last_used_at = now()
@@ -139,22 +136,47 @@ router.post('/reset-password', async (req, res) => {
     );
 
     function clearRefreshCookie(res) {
-  // match the cookie name/opts used when setting the cookie elsewhere in your app
-  res.clearCookie('refresh_token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/'
-  });
-}
+      res.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/'
+      });
+    }
 
-clearRefreshCookie(res);
+    clearRefreshCookie(res);
 
-    // Optionally: you can log this event (time, IP, user_agent) for audit.
     return res.status(200).json({ message: 'Password updated' });
   } catch (err) {
     console.error('reset-password error', err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
+
+// ================================
+// Google OAuth (newly added)
+// ================================
+
+// Step 1: Redirect user to Google
+router.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
+);
+
+// Step 2: Google redirects back here
+router.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  (req, res) => {
+    // req.user is what you returned from the verify callback in auth/google.js
+    // e.g. { user, token }
+    const token = req.user && req.user.token;
+    if (!token) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth?error=google_failed`);
+    }
+
+    // Redirect to the frontend callback page with token as query param
+    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/callback?token=${token}`;
+    return res.redirect(redirectUrl);
+  }
+);
+
 module.exports = router;
