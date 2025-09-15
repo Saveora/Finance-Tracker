@@ -66,7 +66,7 @@ export default function Header() {
         {loading
           ? "..."
           : user
-          ? `${user.first_name} ${user.last_name}`
+          ? `${user.display_name}`
           : "Guest"}
         !
       </h1>
@@ -135,7 +135,7 @@ export default function Header() {
               {loading
                 ? "..."
                 : user
-                ? `${user.first_name} ${user.last_name}`
+                ? `${user.display_name}`
                 : "Guest"}
             </span>
             <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border overflow-hidden">
@@ -155,11 +155,11 @@ export default function Header() {
           >
             <div className="flex flex-col items-center mb-7">
               <div className="w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center mb-2 text-3xl font-bold select-none">
-                {user?.first_name ? user.first_name[0].toUpperCase() : "?"}
+                {user?.display_name ? user.display_name[0].toUpperCase() : "?"}
               </div>
               <div className="text-sm font-medium">{user?.email}</div>
               <div className="text-lg font-bold mt-2">
-                Hi, {user?.first_name || "User"}!
+                Hi, {user?.display_name || "User"}!
               </div>
             </div>
             <div className="flex gap-3">

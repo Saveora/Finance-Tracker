@@ -56,6 +56,9 @@ async function signup(req, res) {
     );
   }
 
+  // Create single display name by concatenating first + last (trim to avoid double spaces)
+  const displayName = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+
   // phone validation/normalization
   const pn = parsePhoneNumberFromString(String(phone), "IN");
   if (!pn || !pn.isValid()) {
@@ -68,15 +71,14 @@ async function signup(req, res) {
     await client.query("BEGIN");
 
     const insertUserText = `
-      INSERT INTO users (username, email, first_name, last_name, phone)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, username, email, first_name, last_name, phone, created_at
+      INSERT INTO users (username, email, display_name, phone)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, username, email, display_name, phone, created_at
     `;
     const userRes = await client.query(insertUserText, [
       uname,
       emailNorm,
-      first,
-      last,
+      displayName,
       phoneE164,
     ]);
     const user = userRes.rows[0];
@@ -117,6 +119,7 @@ async function signup(req, res) {
   }
 }
 
+
 /**
  * POST /auth/login
  * Logs in user, issues tokens and redirects to dashboard
@@ -132,7 +135,7 @@ async function login(req, res) {
 
   try {
     const userRes = await db.query(
-      `SELECT id, email, first_name, last_name, username 
+      `SELECT id, email, display_name, username 
        FROM users 
        WHERE email=$1`,
       [String(email).trim().toLowerCase()]
@@ -177,6 +180,7 @@ const expiresAt = refreshExpiresAt( remember ? longDays : shortDays );
   cookieOpts.expires = expiresAt; // persistent cookie
   // optionally set cookieOpts.maxAge = longDays * 24*3600*1000
 } else {
+
   // session cookie (omit expires so browser treats it as session cookie)
   // but we still store a short expiry in DB so server will reject after shortDays
   // ensure cookieOpts.expires is not set
@@ -189,8 +193,7 @@ const expiresAt = refreshExpiresAt( remember ? longDays : shortDays );
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        displayName:user.display_name,
         username: user.username,
       },
       redirectTo: "/dashboard",

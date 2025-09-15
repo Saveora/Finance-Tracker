@@ -19,7 +19,7 @@ module.exports = async function requireAuth(req, res, next) {
 
     // optionally check user exists
     const userRes = await query(
-  'SELECT id, email, first_name, last_name FROM users WHERE id=$1',
+  'SELECT id, email, display_name FROM users WHERE id=$1',
   [payload.sub]
 );
     if (userRes.rowCount === 0) return res.status(401).json({ error: 'Unknown user' });

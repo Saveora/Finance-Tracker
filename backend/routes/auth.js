@@ -163,20 +163,52 @@ router.get('/auth/google',
 );
 
 // Step 2: Google redirects back here
-router.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+// inside backend/routes/auth.js (replace the /auth/google/callback handler)
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/auth?error=google_failed", session: false }),
   (req, res) => {
-    // req.user is what you returned from the verify callback in auth/google.js
-    // e.g. { user, token }
-    const token = req.user && req.user.token;
-    if (!token) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth?error=google_failed`);
+    // req.user now contains { user, accessToken, refreshToken, is_remember }
+    const payload = req.user || {};
+    const accessToken = payload.accessToken;
+    const refreshToken = payload.refreshToken;
+    const isRemember = payload.is_remember;
+
+    if (!accessToken || !refreshToken) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL || "http://localhost:3000"}/auth?error=google_failed`
+      );
     }
 
-    // Redirect to the frontend callback page with token as query param
-    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/callback?token=${token}`;
+    // cookie base options (keep in sync with authcontroller COOKIE_OPTIONS_BASE)
+    const cookieBase = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.COOKIE_SAMESITE || "lax",
+      path: "/",
+    };
+
+    const cookieOpts = { ...cookieBase };
+    if (isRemember) {
+      // set persistent cookie to match server session expiry
+      // We stored the expires_at in DB, so we can set a long expiry as well
+      const days = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || "30", 10);
+      cookieOpts.expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    }
+    // otherwise leave cookie as session cookie (no expires)
+
+    // set refresh cookie (httpOnly)
+    res.cookie("refresh_token", refreshToken, cookieOpts);
+
+    // redirect to frontend callback route — include the short-lived access token in query param
+    // Note: exposing access token in URL is convenient but not ideal. It's short-lived; the refresh cookie is httpOnly.
+    const redirectUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/callback?token=${encodeURIComponent(
+      accessToken
+    )}`;
+
     return res.redirect(redirectUrl);
   }
 );
+
 
 module.exports = router;

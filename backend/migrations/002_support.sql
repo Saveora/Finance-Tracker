@@ -27,8 +27,8 @@ CREATE TABLE faqs (
   views BIGINT DEFAULT 0
 );
 
-CREATE INDEX faqs_search_idx ON faqs USING GIN (search_vector);
-CREATE INDEX faqs_question_trgm_idx ON faqs USING GIN ((question) gin_trgm_ops);
+-- CREATE INDEX faqs_search_idx ON faqs USING GIN (search_vector);
+-- CREATE INDEX faqs_question_trgm_idx ON faqs USING GIN ((question) gin_trgm_ops);
 
 -- =========================
 -- 2) Knowledge Base / Suggested Articles
@@ -44,11 +44,11 @@ CREATE TABLE kb_articles (
   tags TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  views BIGINT DEFAULT 0,
+  views BIGINT DEFAULT 0
 );
 
-CREATE INDEX kb_articles_search_idx ON kb_articles USING GIN (search_vector);
-CREATE INDEX kb_articles_title_trgm_idx ON kb_articles USING GIN ((title) gin_trgm_ops);
+-- CREATE INDEX kb_articles_search_idx ON kb_articles USING GIN (search_vector);
+-- CREATE INDEX kb_articles_title_trgm_idx ON kb_articles USING GIN ((title) gin_trgm_ops);
 
 -- Optional attachments for KB
 CREATE TABLE kb_attachments (
