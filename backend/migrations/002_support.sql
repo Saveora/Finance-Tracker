@@ -1,126 +1,123 @@
--- Recommended Postgres schema for "Support" features (FAQs, Contacts, Callbacks, Tickets, Chat, Tips)
--- Assumes Postgres 12+; run as a DB superuser (extensions)
+-- ============================================
+-- EXTENSIONS (only run once per DB)
+-- ============================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";   -- generates UUIDs
+CREATE EXTENSION IF NOT EXISTS pg_trgm;       -- enables fuzzy search for FAQ/articles
 
--- Enable extensions (run once per DB)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS pg_trgm;    -- optional but helpful for fuzzy search
-
--- -------------------------
--- ENUMS
--- -------------------------
+-- ============================================
+-- ENUMS (categorical values)
+-- ============================================
 CREATE TYPE callback_status AS ENUM ('pending','scheduled','completed','failed','cancelled');
 CREATE TYPE ticket_status AS ENUM ('open','pending','in_progress','resolved','closed','spam');
 CREATE TYPE ticket_priority AS ENUM ('low','medium','high','urgent');
 CREATE TYPE channel_type_enum AS ENUM ('web','email','phone','whatsapp','twitter','in_app');
 CREATE TYPE sender_role AS ENUM ('user','agent','system');
 
--- =========================
--- 1) FAQs (searchable)
--- =========================
+-- ============================================
+-- 1) FAQs (for "Frequently Asked Questions")
+-- ============================================
 CREATE TABLE faqs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  question TEXT NOT NULL,
-  answer TEXT NOT NULL,
-  is_published BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  views BIGINT DEFAULT 0
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),   -- unique FAQ id
+  question TEXT NOT NULL,                           -- shown in frontend (e.g. "How do I reset my password?")
+  answer TEXT NOT NULL,                             -- expanded content
+  is_published BOOLEAN DEFAULT TRUE,                -- whether to show or hide FAQ
+  created_at TIMESTAMPTZ DEFAULT now(),             -- when FAQ was added
+  updated_at TIMESTAMPTZ DEFAULT now(),             -- when FAQ was last updated
+  views BIGINT DEFAULT 0                            -- track how many times it was opened
 );
 
--- CREATE INDEX faqs_search_idx ON faqs USING GIN (search_vector);
--- CREATE INDEX faqs_question_trgm_idx ON faqs USING GIN ((question) gin_trgm_ops);
-
--- =========================
--- 2) Knowledge Base / Suggested Articles
--- =========================
+-- ============================================
+-- 2) Suggested Articles (like "How Saveora keeps your data secure")
+-- ============================================
 CREATE TABLE kb_articles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  summary TEXT,
-  body TEXT NOT NULL,             -- markdown / html
-  slug TEXT,
+  title TEXT NOT NULL,                              -- article title
+  summary TEXT,                                     -- short description (optional)
+  body TEXT NOT NULL,                               -- full text/markdown
+  slug TEXT UNIQUE,                                 -- SEO-friendly identifier
   is_published BOOLEAN DEFAULT TRUE,
-  category TEXT NULL,
-  tags TEXT[] DEFAULT '{}',
+  category TEXT,                                    -- optional (e.g., "Security")
+  tags TEXT[] DEFAULT '{}',                         -- e.g., ['banking','password']
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   views BIGINT DEFAULT 0
 );
 
--- CREATE INDEX kb_articles_search_idx ON kb_articles USING GIN (search_vector);
--- CREATE INDEX kb_articles_title_trgm_idx ON kb_articles USING GIN ((title) gin_trgm_ops);
-
--- Optional attachments for KB
+-- Attachments for articles (if guide PDFs/screenshots are uploaded)
 CREATE TABLE kb_attachments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   article_id UUID NOT NULL REFERENCES kb_articles(id) ON DELETE CASCADE,
-  filename TEXT NOT NULL,
-  content_type TEXT,
+  filename TEXT NOT NULL,                           -- stored file name
+  content_type TEXT,                                -- MIME type
   size_bytes BIGINT,
-  storage_key TEXT NOT NULL,     -- e.g. s3 key
+  storage_key TEXT NOT NULL,                        -- S3 path or local path
   uploaded_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- ============================================
+-- 3) Contact Info (for "Contact Us" section)
+-- ============================================
+CREATE TABLE support_contacts (
+  id BIGSERIAL PRIMARY KEY,
+  contact_type TEXT NOT NULL,                       -- e.g., 'email','phone','twitter','whatsapp'
+  value TEXT NOT NULL,                              -- actual info (support@saveora.com, phone number)
+  display_label TEXT,                               -- optional label shown in UI
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- =========================
--- 4) Callback Requests
--- =========================
+-- ============================================
+-- 4) Callback Requests (matches "Request a callback" form)
+-- ============================================
 CREATE TABLE callback_requests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NULL,                -- if you have users table
+  user_id UUID NULL,                                -- if linked to registered user
   country_code TEXT DEFAULT '+91',
-  phone_number TEXT NOT NULL,
-  preferred_time TIMESTAMPTZ NULL,  -- user's preferred callback time (with TZ)
-  timezone TEXT NULL,               -- optional timezone string supplied by user
-  brief_query TEXT NULL,            -- short description provided by user
-  source channel_type_enum DEFAULT 'web',
-  status callback_status DEFAULT 'pending',
+  phone_number TEXT NOT NULL,                       -- phone number entered
+  preferred_time TIMESTAMPTZ NULL,                  -- optional requested callback time
+  timezone TEXT NULL,                               -- optional timezone
+  brief_query TEXT NULL,                            -- short description ("Need help linking bank")
+  source channel_type_enum DEFAULT 'web',           -- where it came from
+  status callback_status DEFAULT 'pending',         -- default status
   requested_at TIMESTAMPTZ DEFAULT now(),
   scheduled_at TIMESTAMPTZ NULL,
-  assigned_agent UUID NULL,         -- FK to support_agents (created below)
+  assigned_agent UUID NULL,                         -- support agent assigned
   notes TEXT NULL,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_callback_status ON callback_requests (status);
-CREATE INDEX idx_callback_scheduled_at ON callback_requests (scheduled_at);
-
--- =========================
--- 5) Support Tickets & Messages
--- =========================
+-- ============================================
+-- 5) Support Tickets (matches "Raise a support ticket")
+-- ============================================
 CREATE TABLE support_tickets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  public_id TEXT UNIQUE,            -- optional friendly ID like TCK-000123 (generate in app or via trigger)
+  public_id TEXT UNIQUE,                            -- user-facing ID like TCK-00123
   user_id UUID NULL,
-  subject TEXT NOT NULL,
-  description TEXT NOT NULL,
+  subject TEXT NOT NULL,                            -- "Bank linking issue"
+  description TEXT NOT NULL,                        -- user’s detailed description
   priority ticket_priority DEFAULT 'medium',
   status ticket_status DEFAULT 'open',
   channel channel_type_enum DEFAULT 'web',
-  source TEXT NULL,                 -- e.g., 'support page'
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  assigned_agent UUID NULL,         -- FK to support_agents.id
+  assigned_agent UUID NULL,
   last_message_at TIMESTAMPTZ NULL,
   attachments_count INT DEFAULT 0,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_tickets_status ON support_tickets (status);
-CREATE INDEX idx_tickets_user ON support_tickets (user_id);
-
--- Messages within a ticket (conversation)
+-- Ticket conversation messages
 CREATE TABLE ticket_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
-  sender_role sender_role NOT NULL,
-  sender_id UUID NULL,              -- optional FK to user/agent
+  sender_role sender_role NOT NULL,                 -- user/agent/system
+  sender_id UUID NULL,                              -- link to user/agent table
   message TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
--- Attachments for tickets (store files in S3 and record keys here)
+-- Ticket attachments (optional screenshot upload)
 CREATE TABLE ticket_attachments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
@@ -133,7 +130,7 @@ CREATE TABLE ticket_attachments (
   uploaded_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Feedback / rating on tickets
+-- Ticket rating (matches "Was this page helpful?" star rating)
 CREATE TABLE ticket_ratings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
@@ -143,13 +140,12 @@ CREATE TABLE ticket_ratings (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- =========================
--- 6) Live Chat (sessions & messages) + Agents
--- =========================
+-- ============================================
+-- 6) Live Chat (matches chat widget "Welcome to Saveora support")
+-- ============================================
 CREATE TABLE support_agents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NULL,                -- optional mapping to user table
-  display_name TEXT,
+  display_name TEXT,                                -- agent name
   is_online BOOLEAN DEFAULT FALSE,
   last_seen_at TIMESTAMPTZ NULL,
   skills TEXT[] DEFAULT '{}',
@@ -163,7 +159,7 @@ CREATE TABLE live_chat_sessions (
   started_at TIMESTAMPTZ DEFAULT now(),
   ended_at TIMESTAMPTZ NULL,
   assigned_agent UUID NULL REFERENCES support_agents(id) ON DELETE SET NULL,
-  status TEXT DEFAULT 'active',
+  status TEXT DEFAULT 'active',                     -- active, ended, abandoned
   estimated_wait_seconds INT NULL,
   metadata JSONB DEFAULT '{}'::jsonb
 );
@@ -174,54 +170,31 @@ CREATE TABLE live_chat_messages (
   sender_role sender_role NOT NULL,
   sender_id UUID NULL,
   text TEXT,
-  attachments JSONB DEFAULT '[]'::jsonb,
+  attachments JSONB DEFAULT '[]'::jsonb,            -- store uploaded files as JSON array
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX idx_live_chat_session ON live_chat_messages (session_id);
-
--- =========================
--- 7) Support Tips & UI Settings
--- =========================
+-- ============================================
+-- 7) Support Tips (for bottom "Support tip" section)
+-- ============================================
 CREATE TABLE support_tips (
   id BIGSERIAL PRIMARY KEY,
-  tip_text TEXT NOT NULL,
-  priority SMALLINT DEFAULT 10,
+  tip_text TEXT NOT NULL,                           -- e.g., "Include screenshots for faster help"
+  priority SMALLINT DEFAULT 10,                     -- smaller number = higher priority
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE support_settings (
-  key_text TEXT PRIMARY KEY,
-  value JSONB NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- =========================
--- 8) Activity / Audit Log (simple)
--- =========================
+-- ============================================
+-- 8) Activity Log (internal tracking)
+-- ============================================
 CREATE TABLE support_activity_log (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   actor_id UUID NULL,
-  actor_type TEXT NULL,
-  action TEXT NOT NULL,
-  resource_type TEXT NULL,
+  actor_type TEXT NULL,                             -- 'user','agent'
+  action TEXT NOT NULL,                             -- e.g., "ticket_created"
+  resource_type TEXT NULL,                          -- "ticket","faq","chat"
   resource_id UUID NULL,
   metadata JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT now()
 );
-
--- =========================
--- Helpful indexes & notes
--- =========================
--- You will likely want indexes on fields you query frequently:
-CREATE INDEX idx_tickets_assigned_agent ON support_tickets (assigned_agent);
-CREATE INDEX idx_sessions_assigned_agent ON live_chat_sessions (assigned_agent);
-CREATE INDEX idx_ticket_messages_ticket ON ticket_messages (ticket_id);
-
--- NOTES:
--- 1) Files: store binary files in S3 (or other object store) and reference them with storage_key.
--- 2) Search: use the tsvector + GIN index for fast FAQ/Kb article search.
--- 3) Public ticket id: generate user-friendly public_id in application code or add a DB trigger if you want automatic generation.
--- 4) Use application-level code to increment attachments_count and update last_message_at when messages/attachments are created.
--- 5) If you have a users table, convert user_id columns to actual FK constraints referencing it.
