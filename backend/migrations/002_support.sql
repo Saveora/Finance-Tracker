@@ -89,43 +89,44 @@ CREATE TABLE support_contacts (
 -- ============================================
 -- 5) Support Tickets (matches "Raise a support ticket")
 -- ============================================
+-- 1) support_tickets: make user_id nullable and reference users(id)
 CREATE TABLE support_tickets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  public_id TEXT UNIQUE,                            -- user-facing ID like TCK-00123
-  user_id BIGINT NOT NULL REFERENCES users(id) ON DELTETE SET NULL,
-  subject TEXT NOT NULL,                            -- "Bank linking issue"
-  description TEXT NOT NULL,                        -- user’s detailed description
+  public_id TEXT UNIQUE,
+  user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,  -- made NULLABLE to allow SET NULL on delete
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
   status ticket_status DEFAULT 'open',
   channel channel_type_enum DEFAULT 'in_app',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  assigned_agent UUID,
-  last_message_at TIMESTAMPTZ,
+  assigned_agent UUID NULL,
+  last_message_at TIMESTAMPTZ NULL,
   attachments_count INT DEFAULT 0,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
--- Ticket conversation messages
+-- 2) ticket_messages: make sender_id BIGINT NULL to match users.id type
 CREATE TABLE ticket_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
-  sender_role sender_role NOT NULL,                 -- user/agent/system
-  sender_id UUID,                              -- link to user/agent table
+  sender_role sender_role NOT NULL,
+  sender_id BIGINT NULL,                       -- nullable, references users.id (BIGINT)
   message TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
--- Ticket attachments (optional screenshot upload)
+-- 3) ticket_attachments: allow message_id to be NULL so ON DELETE SET NULL works
 CREATE TABLE ticket_attachments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
-  message_id UUID NOT NULL REFERENCES ticket_messages(id) ON DELETE SET NULL,
+  message_id UUID NULL REFERENCES ticket_messages(id) ON DELETE SET NULL, -- nullable to allow SET NULL
   filename TEXT NOT NULL,
   content_type TEXT,
   size_bytes BIGINT,
   storage_key TEXT NOT NULL,
-  uploaded_by UUID NULL,
+  uploaded_by BIGINT NULL,       -- made BIGINT to match users.id
   uploaded_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -134,15 +135,14 @@ CREATE TABLE ticket_ratings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
   rating SMALLINT CHECK (rating >= 1 AND rating <= 5),
-  created_by UUID NOT NULL,
+  created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,                    -- nullable if anonymous ratings allowed
   created_at TIMESTAMPTZ DEFAULT now()
 );
-
 -- ============================================
 -- 6) Live Chat (matches chat widget "Welcome to Saveora support")
 -- ============================================
 CREATE TABLE support_agents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id BIGSERIAL PRIMARY KEY,
   display_name TEXT,                                -- agent name
   is_online BOOLEAN DEFAULT FALSE,
   last_seen_at TIMESTAMPTZ NULL,
@@ -150,25 +150,27 @@ CREATE TABLE support_agents (
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
+-- 5) live_chat_sessions: correct REFERENCES and user_id type
 CREATE TABLE live_chat_sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id BIGINT NOT NULL REFERENCES(user_id) ON DELETE CASCADE,
+  user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE,  -- fixed reference; made NULLABLE
   session_token TEXT,
   started_at TIMESTAMPTZ DEFAULT now(),
-  ended_at TIMESTAMPTZ,
-  assigned_agent UUID REFERENCES support_agents(id) ON DELETE SET NULL,
-  status TEXT DEFAULT 'active',                     -- active, ended, abandoned
-  estimated_wait_seconds INT,
+  ended_at TIMESTAMPTZ NULL,
+  assigned_agent BIGINT NULL REFERENCES support_agents(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'active',
+  estimated_wait_seconds INT NULL,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
+-- 6) live_chat_messages: make sender_id BIGINT NULL
 CREATE TABLE live_chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id UUID NOT NULL REFERENCES live_chat_sessions(id) ON DELETE CASCADE,
   sender_role sender_role NOT NULL,
-  sender_id UUID NOT NULL,
+  sender_id BIGINT NULL,           -- nullable to match users.id
   text TEXT,
-  attachments JSONB DEFAULT '[]'::jsonb,            -- store uploaded files as JSON array
+  attachments JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
