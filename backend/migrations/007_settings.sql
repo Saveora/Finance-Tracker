@@ -3,7 +3,6 @@
 CREATE TABLE IF NOT EXISTS user_profiles (
 profile_id BIGSERIAL PRIMARY KEY,
 user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-display_name VARCHAR(100),
 currency VARCHAR(10) DEFAULT 'INR',
 language VARCHAR(50) DEFAULT 'English',
 timezone VARCHAR(100) DEFAULT 'Asia/Kolkata',

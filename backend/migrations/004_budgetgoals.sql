@@ -7,8 +7,7 @@ CREATE TABLE saving_goals (
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
     deadline DATE NOT NULL,                   -- Goal deadline (e.g., 2026-06-01)
     is_recurring BOOLEAN DEFAULT FALSE,       -- Whether recurring or not
-    color_accent VARCHAR(20),                 -- e.g., 'yellow', 'green', 'blue', 'pink'
-    is_active BOOLEAN DEFAULT TRUE,           -- If the goal is active
+    color_accent VARCHAR(20),                 -- e.g., 'yellow', 'green', 'blue', 'pink'          
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

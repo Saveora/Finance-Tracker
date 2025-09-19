@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;       -- enables fuzzy search for FAQ/ar
 CREATE TYPE callback_status AS ENUM ('pending','scheduled','completed','failed','cancelled');
 CREATE TYPE ticket_status AS ENUM ('open','pending','in_progress','resolved','closed','spam');
 CREATE TYPE ticket_priority AS ENUM ('low','medium','high','urgent');
-CREATE TYPE channel_type_enum AS ENUM ('web','email','phone','whatsapp','twitter','in_app');
+CREATE TYPE channel_type_enum AS ENUM ('email','phone','whatsapp','in_app');
 CREATE TYPE sender_role AS ENUM ('user','agent','system');
 
 -- ============================================
@@ -29,30 +29,30 @@ CREATE TABLE faqs (
 -- ============================================
 -- 2) Suggested Articles (like "How Saveora keeps your data secure")
 -- ============================================
-CREATE TABLE kb_articles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,                              -- article title
-  summary TEXT,                                     -- short description (optional)
-  body TEXT NOT NULL,                               -- full text/markdown
-  slug TEXT UNIQUE,                                 -- SEO-friendly identifier
-  is_published BOOLEAN DEFAULT TRUE,
-  category TEXT,                                    -- optional (e.g., "Security")
-  tags TEXT[] DEFAULT '{}',                         -- e.g., ['banking','password']
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  views BIGINT DEFAULT 0
-);
+-- CREATE TABLE kb_articles (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   title TEXT NOT NULL,                              -- article title
+--   summary TEXT,                                     -- short description (optional)
+--   body TEXT NOT NULL,                               -- full text/markdown
+--   slug TEXT UNIQUE,                                 -- SEO-friendly identifier
+--   is_published BOOLEAN DEFAULT TRUE,
+--   category TEXT,                                    -- optional (e.g., "Security")
+--   tags TEXT[] DEFAULT '{}',                         -- e.g., ['banking','password']
+--   created_at TIMESTAMPTZ DEFAULT now(),
+--   updated_at TIMESTAMPTZ DEFAULT now(),
+--   views BIGINT DEFAULT 0
+-- );
 
--- Attachments for articles (if guide PDFs/screenshots are uploaded)
-CREATE TABLE kb_attachments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  article_id UUID NOT NULL REFERENCES kb_articles(id) ON DELETE CASCADE,
-  filename TEXT NOT NULL,                           -- stored file name
-  content_type TEXT,                                -- MIME type
-  size_bytes BIGINT,
-  storage_key TEXT NOT NULL,                        -- S3 path or local path
-  uploaded_at TIMESTAMPTZ DEFAULT now()
-);
+-- -- Attachments for articles (if guide PDFs/screenshots are uploaded)
+-- CREATE TABLE kb_attachments (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   article_id UUID NOT NULL REFERENCES kb_articles(id) ON DELETE CASCADE,
+--   filename TEXT NOT NULL,                           -- stored file name
+--   content_type TEXT,                                -- MIME type
+--   size_bytes BIGINT,
+--   storage_key TEXT NOT NULL,                        -- S3 path or local path
+--   uploaded_at TIMESTAMPTZ DEFAULT now()
+-- );
 
 -- ============================================
 -- 3) Contact Info (for "Contact Us" section)
@@ -69,22 +69,22 @@ CREATE TABLE support_contacts (
 -- ============================================
 -- 4) Callback Requests (matches "Request a callback" form)
 -- ============================================
-CREATE TABLE callback_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NULL,                                -- if linked to registered user
-  country_code TEXT DEFAULT '+91',
-  phone_number TEXT NOT NULL,                       -- phone number entered
-  preferred_time TIMESTAMPTZ NULL,                  -- optional requested callback time
-  timezone TEXT NULL,                               -- optional timezone
-  brief_query TEXT NULL,                            -- short description ("Need help linking bank")
-  source channel_type_enum DEFAULT 'web',           -- where it came from
-  status callback_status DEFAULT 'pending',         -- default status
-  requested_at TIMESTAMPTZ DEFAULT now(),
-  scheduled_at TIMESTAMPTZ NULL,
-  assigned_agent UUID NULL,                         -- support agent assigned
-  notes TEXT NULL,
-  metadata JSONB DEFAULT '{}'::jsonb
-);
+-- CREATE TABLE callback_requests (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   user_id UUID NULL,                                -- if linked to registered user
+--   country_code TEXT DEFAULT '+91',
+--   phone_number TEXT NOT NULL,                       -- phone number entered
+--   preferred_time TIMESTAMPTZ NULL,                  -- optional requested callback time
+--   timezone TEXT NULL,                               -- optional timezone
+--   brief_query TEXT NULL,                            -- short description ("Need help linking bank")
+--   source channel_type_enum DEFAULT 'web',           -- where it came from
+--   status callback_status DEFAULT 'pending',         -- default status
+--   requested_at TIMESTAMPTZ DEFAULT now(),
+--   scheduled_at TIMESTAMPTZ NULL,
+--   assigned_agent UUID NULL,                         -- support agent assigned
+--   notes TEXT NULL,
+--   metadata JSONB DEFAULT '{}'::jsonb
+-- );
 
 -- ============================================
 -- 5) Support Tickets (matches "Raise a support ticket")
@@ -92,16 +92,15 @@ CREATE TABLE callback_requests (
 CREATE TABLE support_tickets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   public_id TEXT UNIQUE,                            -- user-facing ID like TCK-00123
-  user_id UUID NULL,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELTETE SET NULL,
   subject TEXT NOT NULL,                            -- "Bank linking issue"
   description TEXT NOT NULL,                        -- user’s detailed description
-  priority ticket_priority DEFAULT 'medium',
   status ticket_status DEFAULT 'open',
-  channel channel_type_enum DEFAULT 'web',
+  channel channel_type_enum DEFAULT 'in_app',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  assigned_agent UUID NULL,
-  last_message_at TIMESTAMPTZ NULL,
+  assigned_agent UUID,
+  last_message_at TIMESTAMPTZ,
   attachments_count INT DEFAULT 0,
   metadata JSONB DEFAULT '{}'::jsonb
 );
@@ -111,7 +110,7 @@ CREATE TABLE ticket_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
   sender_role sender_role NOT NULL,                 -- user/agent/system
-  sender_id UUID NULL,                              -- link to user/agent table
+  sender_id UUID,                              -- link to user/agent table
   message TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   metadata JSONB DEFAULT '{}'::jsonb
@@ -121,7 +120,7 @@ CREATE TABLE ticket_messages (
 CREATE TABLE ticket_attachments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
-  message_id UUID NULL REFERENCES ticket_messages(id) ON DELETE SET NULL,
+  message_id UUID NOT NULL REFERENCES ticket_messages(id) ON DELETE SET NULL,
   filename TEXT NOT NULL,
   content_type TEXT,
   size_bytes BIGINT,
@@ -135,8 +134,7 @@ CREATE TABLE ticket_ratings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   ticket_id UUID NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
   rating SMALLINT CHECK (rating >= 1 AND rating <= 5),
-  comment TEXT NULL,
-  created_by UUID NULL,
+  created_by UUID NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -154,13 +152,13 @@ CREATE TABLE support_agents (
 
 CREATE TABLE live_chat_sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NULL,
+  user_id BIGINT NOT NULL REFERENCES(user_id) ON DELETE CASCADE,
   session_token TEXT,
   started_at TIMESTAMPTZ DEFAULT now(),
-  ended_at TIMESTAMPTZ NULL,
-  assigned_agent UUID NULL REFERENCES support_agents(id) ON DELETE SET NULL,
+  ended_at TIMESTAMPTZ,
+  assigned_agent UUID REFERENCES support_agents(id) ON DELETE SET NULL,
   status TEXT DEFAULT 'active',                     -- active, ended, abandoned
-  estimated_wait_seconds INT NULL,
+  estimated_wait_seconds INT,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
@@ -168,33 +166,24 @@ CREATE TABLE live_chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id UUID NOT NULL REFERENCES live_chat_sessions(id) ON DELETE CASCADE,
   sender_role sender_role NOT NULL,
-  sender_id UUID NULL,
+  sender_id UUID NOT NULL,
   text TEXT,
   attachments JSONB DEFAULT '[]'::jsonb,            -- store uploaded files as JSON array
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- ============================================
--- 7) Support Tips (for bottom "Support tip" section)
--- ============================================
-CREATE TABLE support_tips (
-  id BIGSERIAL PRIMARY KEY,
-  tip_text TEXT NOT NULL,                           -- e.g., "Include screenshots for faster help"
-  priority SMALLINT DEFAULT 10,                     -- smaller number = higher priority
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+
 
 -- ============================================
 -- 8) Activity Log (internal tracking)
 -- ============================================
-CREATE TABLE support_activity_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  actor_id UUID NULL,
-  actor_type TEXT NULL,                             -- 'user','agent'
-  action TEXT NOT NULL,                             -- e.g., "ticket_created"
-  resource_type TEXT NULL,                          -- "ticket","faq","chat"
-  resource_id UUID NULL,
-  metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+-- CREATE TABLE support_activity_log (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   actor_id UUID NULL,
+--   actor_type TEXT NULL,                             -- 'user','agent'
+--   action TEXT NOT NULL,                             -- e.g., "ticket_created"
+--   resource_type TEXT NULL,                          -- "ticket","faq","chat"
+--   resource_id UUID NULL,
+--   metadata JSONB DEFAULT '{}'::jsonb,
+--   created_at TIMESTAMPTZ DEFAULT now()
+-- );
