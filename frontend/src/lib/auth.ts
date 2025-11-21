@@ -34,7 +34,7 @@ export function clearAccessToken() {
  */
 export async function attemptRefresh(): Promise<boolean> {
   try {
-    const res = await fetch('http://localhost:5000/refresh', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/refresh`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

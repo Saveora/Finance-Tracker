@@ -76,7 +76,7 @@ export default function RegisterForm() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/signup', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -113,7 +113,7 @@ export default function RegisterForm() {
 
   // --- NEW: Google login handler ---
   function handleGoogleLogin() {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/auth/google`;
   }
 
  return (

@@ -1,52 +1,23 @@
+//frontend/src/app/dashboard/my-bank/page.tsx
 'use client'
 
 import React, { useEffect, useState } from "react";
-import { Eye, EyeOff, Plus } from "lucide-react";
+import { Eye, EyeOff, Plus, LogOut } from "lucide-react";
 import Link from "next/link";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export type BankAccount = {
   id: string;
   bankName: string;
-  holderName: string;
-  accountNumber: string;
-  currency: string;
-  balance: number;
-  type: "Savings" | "Checking" | "Credit" | "Other";
+  holderName?: string;
+  accountNumber?: string;
+  currency?: string;
+  balance?: number;
+  type?: "Savings" | "Checking" | "Credit" | "Other";
   logoColor?: string;
+  raw_meta?: any;
+  consentId?: string | null; // <-- important: used for revoke
 };
-
-const mockAccounts: BankAccount[] = [
-  {
-    id: "a1",
-    bankName: "Axis Bank",
-    holderName: "Jay K. Patra",
-    accountNumber: "123456789012",
-    currency: "INR",
-    balance: 154320.5,
-    type: "Savings",
-    logoColor: "bg-gradient-to-r from-indigo-500 to-purple-500",
-  },
-  {
-    id: "a2",
-    bankName: "State Bank of India",
-    holderName: "Jay K. Patra",
-    accountNumber: "987654321000",
-    currency: "INR",
-    balance: 50200,
-    type: "Checking",
-    logoColor: "bg-gradient-to-r from-emerald-400 to-green-600",
-  },
-  {
-    id: "a3",
-    bankName: "HDFC Bank",
-    holderName: "Jay K. Patra",
-    accountNumber: "111122223333",
-    currency: "INR",
-    balance: 78000.75,
-    type: "Credit",
-    logoColor: "bg-gradient-to-r from-pink-400 to-rose-500",
-  },
-];
 
 function formatCurrency(amount: number, currency = "INR") {
   const code = currency === "INR" ? "INR" : currency;
@@ -57,7 +28,8 @@ function formatCurrency(amount: number, currency = "INR") {
   }).format(amount);
 }
 
-function maskAccount(acc: string) {
+function maskAccount(acc: string | undefined) {
+  if (!acc) return "•••• •••• ••••";
   const last4 = acc.slice(-4);
   return acc.length <= 4 ? acc : `•••• •••• ${last4}`;
 }
@@ -66,19 +38,111 @@ export default function MyBankPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNumbers, setShowNumbers] = useState(false);
+  const [revokingMap, setRevokingMap] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => {
-      setAccounts(mockAccounts);
-      setLoading(false);
-    }, 700);
-    return () => clearTimeout(t);
+    let mounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts`, {
+          credentials: "include",
+        });
+        if (!mounted) return;
+        const json = await res.json();
+        if (json && json.accounts) {
+          // parse some fields for UI; include consentId
+          const parsed = json.accounts.map((a: any) => {
+            const raw = a.raw_meta || {};
+            const summary = (raw && raw.summary) || (raw.account && raw.account.summary) || null;
+            const balance = summary ? parseFloat(summary.currentBalance || summary.currentBalance || 0) : 0;
+            return {
+              id: String(a.id),
+              bankName: a.bank_name || (raw && raw.fip) || "Bank",
+              holderName:
+                (raw &&
+                  raw.profile &&
+                  raw.profile.holders &&
+                  raw.profile.holders.holder &&
+                  raw.profile.holders.holder[0] &&
+                  raw.profile.holders.holder[0].name) ||
+                "You",
+              accountNumber: a.account_masked || (raw && raw.maskedAccNumber) || undefined,
+              currency: a.currency || (summary && summary.currency) || "INR",
+              balance,
+              type: a.account_type || (summary && summary.type) || "Other",
+              logoColor: "bg-gradient-to-r from-indigo-500 to-purple-500",
+              raw_meta: a.raw_meta,
+              consentId: a.consent_id || raw.consentId || raw.consent?.id || null,
+            } as BankAccount;
+          });
+          setAccounts(parsed);
+        } else {
+          setAccounts([]);
+        }
+      } catch (err) {
+        console.error("Failed to load accounts", err);
+        setAccounts([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
+  const totalBalance = accounts.reduce((s, a) => s + (a.balance || 0), 0);
 
- 
+  // Revoke (disconnect) consent -> backend
+  async function handleDisconnect(consentId?: string | null, accountId?: string) {
+    if (!consentId) {
+      setErrors((e) => ({ ...e, [accountId || "unknown"]: "No consent id available for this account." }));
+      return;
+    }
+
+    const confirmed = window.confirm("Disconnect this bank account? This will revoke the consent and remove associated data.");
+    if (!confirmed) return;
+
+    // set revoking state
+    setRevokingMap((m) => ({ ...m, [consentId]: true }));
+    setErrors((e) => ({ ...e, [consentId]: "" }));
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/setu/consents/${encodeURIComponent(consentId)}/revoke`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "User requested revoke" }),
+      });
+      const json = await (async () => {
+        try {
+          return await res.json();
+        } catch {
+          return { ok: false };
+        }
+      })();
+
+      if (!res.ok) {
+        console.error("Revoke failed:", json);
+        setErrors((e) => ({ ...e, [consentId]: (json && json.error) || "Failed to disconnect account" }));
+        setRevokingMap((m) => ({ ...m, [consentId]: false }));
+        return;
+      }
+
+      // success: remove account(s) with this consentId from the UI
+      setAccounts((prev) => prev.filter((a) => a.consentId !== consentId));
+      // optionally show a short success message (we use console for now)
+      console.log("Revoke success:", json);
+    } catch (err) {
+      console.error("Revoke error", err);
+      setErrors((e) => ({ ...e, [consentId]: "Network error while disconnecting" }));
+    } finally {
+      setRevokingMap((m) => ({ ...m, [consentId]: false }));
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -86,7 +150,7 @@ export default function MyBankPage() {
         <header className="rounded-2xl bg-white shadow-md p-6 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">My Bank</h1>
+              <h1 className="text-3xl font-extrabold text-slate-900">My Bank</h1>
               <p className="text-sm text-slate-500">Overview of connected accounts & balances</p>
             </div>
           </div>
@@ -105,17 +169,15 @@ export default function MyBankPage() {
               <span>{showNumbers ? "Hide numbers" : "Show numbers"}</span>
             </button>
 
-            <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 text-white px-5 py-2 rounded-lg shadow-lg transition-transform duration-300">
+            <Link href="./connect-bank" className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-5 py-2 rounded-lg shadow-lg hover:scale-105 transition-transform duration-200">
               <Plus size={16} />
-              <Link href="./connect-bank">
               <span>Connect New Bank</span>
-              </Link>
-            </button>
+            </Link>
           </div>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
+        <section className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div>
             <div className="rounded-2xl bg-white shadow p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -128,23 +190,14 @@ export default function MyBankPage() {
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center gap-6">
+              <div className="mt-3 mb-6 flex items-center gap-6">
                 <div className="rounded-xl p-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white">
                   <h3 className="text-xs uppercase">Combined</h3>
                   <p className="text-2xl font-bold mt-1">{loading ? "..." : formatCurrency(totalBalance, "INR")}</p>
                 </div>
-
-                <div className="flex-1">
-                  <p className="text-sm text-slate-600">Quick actions</p>
-                  <div className="mt-3 flex gap-3">
-                    <button className="px-4 py-2 rounded-lg border hover:shadow">Transfer</button>
-                    <button className="px-4 py-2 rounded-lg border hover:shadow">Add account</button>
-                    <button className="px-4 py-2 rounded-lg border hover:shadow">Export</button>
-                  </div>
-                </div>
               </div>
 
-              <hr className="my-6" />
+              <hr className="my-4" />
 
               <div>
                 <h3 className="font-medium mb-3">Accounts</h3>
@@ -157,7 +210,7 @@ export default function MyBankPage() {
                       <article key={acc.id} className="flex items-center justify-between p-3 rounded-lg border hover:shadow-sm">
                         <div className="flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${acc.logoColor || "bg-slate-300"}`}>
-                            <span className="font-semibold text-sm">{acc.bankName.split(" ").map((w) => w[0]).slice(0,2).join("")}</span>
+                            <span className="font-semibold text-sm">{(acc.bankName || "Bank").split(" ").map((w) => w[0]).slice(0,2).join("")}</span>
                           </div>
                           <div>
                             <p className="font-medium">{acc.bankName}</p>
@@ -165,9 +218,31 @@ export default function MyBankPage() {
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <p className="font-semibold">{showNumbers ? formatCurrency(acc.balance, acc.currency) : maskAccount(acc.accountNumber)}</p>
-                          <p className="text-xs text-slate-400">Account ID: {acc.id}</p>
+                        <div className="text-right flex items-center gap-4">
+                          <div className="text-right mr-4">
+                            <p className="font-semibold">{showNumbers ? formatCurrency(acc.balance || 0, acc.currency) : maskAccount(acc.accountNumber)}</p>
+                            <p className="text-xs text-slate-400">Account ID: {acc.id}</p>
+                          </div>
+
+                          {/* Disconnect button (visible only if we have consentId) */}
+                          {acc.consentId ? (
+                            <div className="flex flex-col items-end gap-1">
+                              <button
+                                onClick={() => handleDisconnect(acc.consentId, acc.id)}
+                                disabled={!!revokingMap[acc.consentId]}
+                                className="flex items-center gap-2 px-3 py-1 rounded-lg border text-sm text-red-700 hover:bg-red-50 disabled:opacity-60"
+                                title="Disconnect this bank account"
+                              >
+                                <LogOut size={14} />
+                                {revokingMap[acc.consentId] ? "Disconnecting..." : "Disconnect"}
+                              </button>
+                              {errors[acc.consentId || acc.id] && (
+                                <p className="text-xs text-red-600">{errors[acc.consentId || acc.id]}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-slate-400">No consent id</div>
+                          )}
                         </div>
                       </article>
                     ))}
@@ -176,52 +251,8 @@ export default function MyBankPage() {
               </div>
             </div>
           </div>
-
-          <aside>
-            <div className="rounded-2xl bg-white shadow p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Account summary</h3>
-                <p className="text-xs text-slate-500">Updated just now</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">Savings</p>
-                    <p className="font-medium">{formatCurrency(accounts.filter(a=>a.type==='Savings').reduce((s,a)=>s+a.balance,0),'INR')}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-500">Checking</p>
-                    <p className="font-medium">{formatCurrency(accounts.filter(a=>a.type==='Checking').reduce((s,a)=>s+a.balance,0),'INR')}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">Credit</p>
-                    <p className="font-medium">{formatCurrency(accounts.filter(a=>a.type==='Credit').reduce((s,a)=>s+a.balance,0),'INR')}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-slate-500">Accounts</p>
-                    <p className="font-medium">{accounts.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button className="w-full rounded-lg px-4 py-2 bg-indigo-600 text-white hover:brightness-95">Manage connections</button>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-white shadow p-6 space-y-3">
-              <h4 className="font-semibold">Recent activity</h4>
-              <p className="text-sm text-slate-500">No recent activity available in mock data.</p>
-            </div>
-          </aside>
         </section>
 
-        <footer className="mt-8 text-center text-sm text-slate-500">Built with ♥ — replace mock data with your API for real accounts.</footer>
       </div>
     </div>
   );

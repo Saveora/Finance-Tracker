@@ -1,28 +1,17 @@
 // src/lib/fetchWithAuth.ts
-import { getAccessToken, setAccessToken } from "./auth";
+import { getAccessToken, setAccessToken, attemptRefresh } from "./auth";
 
 let refreshPromise: Promise<boolean> | null = null;
 
 async function doRefresh(): Promise<boolean> {
+  // single-flight refresh (re-uses attemptRefresh which you already have)
   if (!refreshPromise) {
     refreshPromise = (async () => {
       try {
-        const res = await fetch("http://localhost:5000/refresh", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (!res.ok) return false;
-        const data = await res.json().catch(() => ({}));
-        if (data && data.accessToken) {
-          setAccessToken(data.accessToken);
-          (window as any).__ACCESS_TOKEN__ = data.accessToken;
-          return true;
-        }
-        return false;
+        // attemptRefresh calls /refresh and sets access token if successful
+        return await attemptRefresh();
       } catch (err) {
-        console.error("refresh failed", err);
+        console.error("doRefresh error", err);
         return false;
       } finally {
         refreshPromise = null;
@@ -42,6 +31,7 @@ function isIdempotentMethod(method?: string) {
  * - attaches Authorization header if access token exists
  * - always sends credentials: 'include' to allow refresh cookie
  * - if response is 401 and request is idempotent, attempts refresh and retries once
+ * - if refresh fails, redirect to login (so callers don't have to)
  */
 export async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) {
   // Build headers preserving any provided headers
@@ -73,7 +63,16 @@ export async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) 
 
   // Try refresh (single-flight)
   const refreshed = await doRefresh();
-  if (!refreshed) return res;
+  if (!refreshed) {
+    // Refresh failed -> immediate redirect to login because session can't be recovered
+    try {
+      // Use window.location so this works from any JS module (hooks/components might not have router)
+      window.location.href = "/auth?type=login";
+    } catch (e) {
+      // fallback no-op
+    }
+    return res; // still return the original 401 response (caller won't use it)
+  }
 
   // Retry once with new token
   const newToken = getAccessToken();

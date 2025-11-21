@@ -181,11 +181,16 @@ router.get(
     }
 
     // cookie base options (keep in sync with authcontroller COOKIE_OPTIONS_BASE)
+    // const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    // const frontendHostname = new URL(frontendUrl).hostname;
     const cookieBase = {
       httpOnly: true,
+      //secure:true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.COOKIE_SAMESITE || "lax",
+      //sameSite: "none",
       path: "/",
+      // domain: frontendHostname === "localhost" ? undefined : "." + frontendHostname,
     };
 
     const cookieOpts = { ...cookieBase };

@@ -1,6 +1,7 @@
 -- Table to store scheduled payments
 CREATE TABLE payment_schedules (
     id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(100) NOT NULL,           -- Title of the schedule
     amount NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',

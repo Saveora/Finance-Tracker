@@ -34,7 +34,7 @@ async function ensureDatabase() {
 
     if (res.rowCount === 0) {
       console.log(`Database "${dbName}" does not exist. Creating...`);
-      // CREATE DATABASE cannot be parametrized, but dbName was parsed from URL
+      
       await client.query(`CREATE DATABASE "${dbName}"`);
       console.log(`Database "${dbName}" created successfully!`);
     } else {
@@ -45,13 +45,7 @@ async function ensureDatabase() {
   }
 }
 
-/**
- * Initialize pool (call this before starting the server).
- * Options:
- *  - max: max clients in pool
- *  - idleTimeoutMillis, connectionTimeoutMillis
- *  - ssl: optional ssl object for hosted DBs
- */
+
 async function initDb({
   max = 10,
   idleTimeoutMillis = 30000,
@@ -73,11 +67,11 @@ async function initDb({
 
   pool.on('error', (err) => {
     console.error('Unexpected PG pool error', err);
-    // In many apps you may want to continue, but here we exit to make failures explicit.
+    
     process.exit(-1);
   });
 
-  // export updated references so other modules that read db.pool after init get the live pool
+  
   module.exports.pool = pool;
   module.exports.query = query;
 
@@ -85,7 +79,7 @@ async function initDb({
   return pool;
 }
 
-// Query helper (safe wrapper around pool.query)
+
 async function query(text, params) {
   if (!pool) throw new Error('Database pool not initialized yet');
   return pool.query(text, params);
@@ -96,16 +90,11 @@ function getPool() {
   return pool;
 }
 
-/**
- * Run migrations with tracking.
- * - Checks both db/migrations and ./migrations (project root).
- * - Uses a schema_migrations table to track applied files (filename unique).
- * - Runs each new migration inside a transaction and records it on success.
- */
+
 async function runMigrations() {
   if (!pool) throw new Error('Database pool not initialized yet');
 
-  // candidate dirs, first found is used
+ 
   const candidateDirs = [
     path.join(__dirname, 'migrations'),        // db/migrations
     path.join(process.cwd(), 'migrations'),    // <project-root>/migrations
@@ -126,7 +115,7 @@ async function runMigrations() {
 
   console.log(`Running migrations from: ${migrationsDir}`);
 
-  // ensure schema_migrations table exists
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       id BIGSERIAL PRIMARY KEY,
@@ -135,11 +124,11 @@ async function runMigrations() {
     );
   `);
 
-  // get list of already applied migrations
+
   const appliedRes = await pool.query(`SELECT filename FROM schema_migrations`);
   const applied = new Set(appliedRes.rows.map(r => r.filename));
 
-  // read migration files (sorted)
+
   const files = fs.readdirSync(migrationsDir)
     .filter((f) => f.endsWith('.sql'))
     .sort();
@@ -155,12 +144,11 @@ async function runMigrations() {
 
     const sql = fs.readFileSync(fullPath, 'utf8');
 
-    // Run migration in transaction, then record it in schema_migrations
+    
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      // Execute SQL file. Note: Postgres accepts multiple statements separated by semicolons.
-      // If your SQL files have special needs (psql meta-commands), consider using a dedicated tool.
+      
       await client.query(sql);
       await client.query(
         `INSERT INTO schema_migrations (filename) VALUES ($1)`,
@@ -172,7 +160,7 @@ async function runMigrations() {
       await client.query('ROLLBACK').catch(() => {});
       console.error(`Migration ${file} failed:`, err && err.message ? err.message : err);
       client.release();
-      throw err; // stop processing further migrations
+      throw err; 
     } finally {
       client.release();
     }
@@ -181,7 +169,6 @@ async function runMigrations() {
   console.log('Migrations complete.');
 }
 
-// Graceful shutdown helper
 async function closePool() {
   if (pool) {
     try {
@@ -195,7 +182,7 @@ async function closePool() {
   }
 }
 
-// Listen for termination signals and close pool
+
 process.on('SIGINT', () => {
   console.log('SIGINT received - closing pool');
   closePool().then(() => process.exit(0));
@@ -210,7 +197,7 @@ process.on('exit', () => {
 
 module.exports = {
   initDb,
-  pool,        // note: updated inside initDb by assigning module.exports.pool = pool
+  pool,        
   query,
   runMigrations,
   getPool,

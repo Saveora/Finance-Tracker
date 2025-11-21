@@ -12,8 +12,9 @@ const {
 
 const COOKIE_OPTIONS_BASE = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.COOKIE_SAMESITE || "lax",
+  secure: true,
+  // sameSite: process.env.COOKIE_SAMESITE || "lax",
+  sameSite: "None",
   path: "/",
 };
 
@@ -186,7 +187,6 @@ const expiresAt = refreshExpiresAt( remember ? longDays : shortDays );
   // ensure cookieOpts.expires is not set
 }
     res.cookie("refresh_token", refreshToken, cookieOpts);
-
     return res.json({
       ok: true,
       accessToken,

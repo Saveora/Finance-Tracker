@@ -1,74 +1,101 @@
-// src/app/dashboard/page.tsx
+//frontend/src/app/dashboard/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import useUser from '@/hooks/useUser';
-import StatCard from '@/components/dashboard/StatCard';
-import VirtualCard from '@/components/dashboard/VirtualCard';
+import { useRouter } from 'next/navigation';
 import SpentChart from '@/components/dashboard/SpentChart';
 import PaymentSchedule from '@/components/dashboard/PaymentSchedule';
 import BudgetGoals from '@/components/dashboard/BudgetGoals';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import Header from '@/components/dashboard/Header';
-import { IndianRupee, Wallet } from 'lucide-react';
+import VirtualCard from '@/components/dashboard/VirtualCard';
+import AccountSummary from '@/components/dashboard/AccountSummary';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
+
+type Account = {
+  id: number | string;
+  bank_name?: string;
+  account_masked?: string;
+  raw_meta?: any;
+};
 
 export default function DashboardPage() {
   const { user, loading } = useUser();
+  const router = useRouter();
+
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth?type=login');
+    }
+  }, [loading, user, router]);
+
+  // Fetch accounts once for header & summary (lifted up)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setAccountsLoading(true);
+      try {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts`, {
+          credentials: 'include',
+        });
+        const json = await res.json();
+        if (!mounted) return;
+        const list: Account[] = Array.isArray(json.accounts) ? json.accounts : [];
+        setAccounts(list);
+        if (list.length === 1) setSelectedAccountId(String(list[0].id));
+        else setSelectedAccountId('ALL');
+      } catch (err) {
+        console.error('Failed to load accounts', err);
+        setAccounts([]);
+        setSelectedAccountId('ALL');
+      } finally {
+        if (mounted) setAccountsLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8f9fb] flex items-center justify-center">
-        Loading...
+        <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-yellow-500 rounded-full" />
       </div>
     );
   }
 
-  // Middleware already blocks unauthenticated users.
-  // If we still have no user here, just render nothing or fallback UI.
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[#F8f9fb]">
       <main className="flex-1 flex flex-col">
-        <Header />
+        {/* pass accounts + selection handlers into Header so dropdown sits on same line */}
+        <Header
+          accounts={accounts}
+          selectedAccountId={selectedAccountId}
+          onAccountChange={(id: string) => setSelectedAccountId(id)}
+        />
 
-        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 items-start">
-          
-          {/* == LEFT COLUMN (2/3 width) == */}
+          {/* LEFT (2/3 width) */}
           <div className="lg:col-span-2 flex flex-col gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard
-                title="Deposits"
-                amount="₹3,00,000.00"
-                icon={<IndianRupee size={28} />}
-                iconBgColor="bg-sky-100"
-                iconTextColor="text-sky-600"
-                borderColor="border-t-sky-500"
-              />
-              <StatCard
-                title="Spent"
-                amount="₹35,102.00"
-                icon={<IndianRupee size={28} />}
-                iconBgColor="bg-orange-100"
-                iconTextColor="text-orange-600"
-                borderColor="border-t-orange-500"
-              />
-              <StatCard
-                title="Total Current Balance"
-                amount="₹2,64,898.00"
-                icon={<Wallet size={28} />}
-                iconBgColor="bg-green-100"
-                iconTextColor="text-green-600"
-                borderColor="border-t-green-500"
-              />
-            </div>
+            {/* Account summary (cards) - receives accounts + selectedAccountId */}
+            <AccountSummary
+              accounts={accounts}
+              selectedAccountId={selectedAccountId}
+            />
+
             <SpentChart />
-            <RecentTransactions />
+           <RecentTransactions
+              selectedAccountId={selectedAccountId}
+            />
           </div>
 
-          {/* == RIGHT COLUMN (1/3 width) == */}
+          {/* RIGHT (1/3) */}
           <div className="lg:col-span-1 flex flex-col gap-6">
             <VirtualCard />
             <PaymentSchedule />
