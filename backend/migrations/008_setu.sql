@@ -1,4 +1,4 @@
--- 001_create_users.sql (you already have users/auth tables)
+-- 008_setu.sql
 CREATE TABLE IF NOT EXISTS consents (
   id BIGSERIAL PRIMARY KEY,
   consent_id TEXT UNIQUE,

@@ -1,4 +1,4 @@
-
+-- 007_settings.sql
 -- 5) user profile (one row per user)
 CREATE TABLE IF NOT EXISTS user_profiles (
 profile_id BIGSERIAL PRIMARY KEY,

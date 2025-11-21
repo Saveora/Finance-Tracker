@@ -1,3 +1,4 @@
+-- 003_payment_schedules.sql
 -- Table to store scheduled payments
 CREATE TABLE payment_schedules (
     id SERIAL PRIMARY KEY,

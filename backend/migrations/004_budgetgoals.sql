@@ -1,3 +1,4 @@
+-- 004_budgetgoals.sql
 -- Table for user financial goals
 CREATE TABLE saving_goals (
     id SERIAL PRIMARY KEY,

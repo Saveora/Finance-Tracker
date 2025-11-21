@@ -1,3 +1,4 @@
+-- 005_contactus.sql
 -- Table for contact form submissions
 CREATE TABLE contact_submissions (
     id SERIAL PRIMARY KEY,
