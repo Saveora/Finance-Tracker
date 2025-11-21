@@ -14,22 +14,32 @@
 ## Screenshots
 
 **Dashboard / Home**
-![Dashboard 1](/mnt/data/dashboard-1.png) ![](/mnt/data/dashboard-2.png)
+![Dashboard 1](/mnt/data/dashboard-1.png) 
+
+![](/mnt/data/dashboard-2.png)
 
 **Transactions / Recent Transactions**
 ![](/mnt/data/transactions.png)
 
 **My Bank / Connect Bank**
-![](/mnt/data/my-bank.png) ![](/mnt/data/connect-bank.png)
+![](/mnt/data/my-bank.png) 
+
+![](/mnt/data/connect-bank.png)
 
 **Transfer Funds / Payment Schedule**
-![](/mnt/data/transfer-funds.png) ![](/mnt/data/payment-schedule.png)
+![](/mnt/data/transfer-funds.png) 
+
+![](/mnt/data/payment-schedule.png)
 
 **Budget Goals / Monthly Budgets**
-![](/mnt/data/budget-goals.png) ![](/mnt/data/monthly-budgets.png)
+![](/mnt/data/budget-goals.png) 
+
+![](/mnt/data/monthly-budgets.png)
 
 **Support / Settings**
-![](/mnt/data/support.png) ![](/mnt/data/settings.png)
+![](/mnt/data/support.png) 
+
+![](/mnt/data/settings.png)
 
 ---
 
@@ -59,7 +69,7 @@ Finance-Tracker is a personal finance dashboard that connects to bank accounts v
 * Payment schedule and basic transfer UI, Budget Goals UI, Virtual Card UI (UI-only for now).
 * Authentication (local + Google OAuth), token-based sessions, and password reset flow.
 
-> **Important:** **All active development is on the `dev` branch.** `main` is kept for snapshots.
+> **Important:** **All active development is on the `dev` branch.**
 
 ---
 
@@ -288,4 +298,6 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
 
 
 ---
+
+
 
