@@ -14,32 +14,32 @@
 ## Screenshots
 
 **Dashboard / Home**
-![Dashboard 1](/mnt/data/dashboard-1.png) 
+![Dashboard 1](/dashboard-1.png) 
 
-![](/mnt/data/dashboard-2.png)
+![](/dashboard-2.png)
 
 **Transactions / Recent Transactions**
-![](/mnt/data/transactions.png)
+![](/transactions.png)
 
 **My Bank / Connect Bank**
-![](/mnt/data/my-bank.png) 
+![](/my-bank.png) 
 
-![](/mnt/data/connect-bank.png)
+![](/connect-bank.png)
 
 **Transfer Funds / Payment Schedule**
-![](/mnt/data/transfer-funds.png) 
+![](/transfer-funds.png) 
 
-![](/mnt/data/payment-schedule.png)
+![](/payment-schedule.png)
 
 **Budget Goals / Monthly Budgets**
-![](/mnt/data/budget-goals.png) 
+![](/budget-goals.png) 
 
-![](/mnt/data/monthly-budgets.png)
+![](/monthly-budgets.png)
 
 **Support / Settings**
-![](/mnt/data/support.png) 
+![](/support.png) 
 
-![](/mnt/data/settings.png)
+![](/settings.png)
 
 ---
 
@@ -298,6 +298,7 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
 
 
 ---
+
 
 
 
