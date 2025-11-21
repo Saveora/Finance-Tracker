@@ -8,7 +8,7 @@
 > This repository contains the source for the Finance-Tracker web app (React / Next.js frontend + Node/Express backend + PostgreSQL). The app provides a dashboard to view deposits, spends and transactions across connected bank accounts (via Setu / Open Banking). **Project is ongoing** — see Roadmap below for planned features.
 
 ![Dashboard screenshot](/mnt/data/dashboard-1.png)
-!(/mnt/data/dashboard-2.png)
+![](/mnt/data/dashboard-2.png)
 ---
 
 ## Table of contents
@@ -234,6 +234,7 @@ Tables used (see `001_create_users.sql` style):
 * Project status: **Ongoing** — active development in `dev` branch.
 
 ---
+
 
 
 
