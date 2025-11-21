@@ -7,8 +7,8 @@
 > **Work in progress — all active development is on the `dev` branch.**  
 > This repository contains the source for the Finance-Tracker web app (React / Next.js frontend + Node/Express backend + PostgreSQL). The app provides a dashboard to view deposits, spends and transactions across connected bank accounts (via Setu / Open Banking). **Project is ongoing** — see Roadmap below for planned features.
 
-![Dashboard screenshot](/mnt/data/56575a3d-737e-4e2f-b68a-b1593fd04245.png)
-
+![Dashboard screenshot](/mnt/data/dashboard-1.png)
+(/mnt/data/dashboard-2.png)
 ---
 
 ## Table of contents
@@ -25,9 +25,8 @@
   - Razorpay Integration  
   - Settings (User Preferences)  
   - Support / Ticketing  
-  - Optional upgrade: Exact totals with `/api/dashboard/summary`  
 - [Testing & deployment notes](#testing--deployment-notes)  
-- [Contributing](#contributing)
+- [Contributing](#contact)
 
 ---
 
@@ -99,17 +98,6 @@ Finance-Tracker is a personal finance dashboard that connects to bank accounts (
 
    * Frontend runs on `http://localhost:3000` by default.
 
-4. **Database**
-
-   * Create Postgres DB and set `DATABASE_URL` in backend `.env`.
-   * Run migrations (some projects use an internal helper — the backend has `runMigrations()` invoked by start if not PROD).
-
-   ```bash
-   # if using provided helper
-   node backend/index.js
-   # OR run SQL scripts inside migrations folder manually with psql
-   ```
-
 ---
 
 ## Important environment variables
@@ -134,7 +122,7 @@ Set these in `backend/.env` (names found in code):
 
 **Public / Auth**
 
-* `POST /login`, `POST /register` (if present in `routes/auth`) — user auth flows
+* `POST /login`, `POST /register`
 * `POST /logout` — server logout route (cookies)
 
 **Auth protected (requires `Authorization: Bearer <token>` or cookie as configured)**
@@ -151,12 +139,6 @@ Set these in `backend/.env` (names found in code):
 * `GET /api/payment-schedules` — payment schedule listing (used for the right column)
 * `GET /health` — healthcheck
 
-**Recommended optional endpoints (suggested / planned)**
-(You can implement these to make frontend faster and accurate)
-
-* `GET /api/dashboard/summary` — **aggregate** totals for deposits, spent, and balances across all user accounts (exact DB SUMs). This removes the need to fetch many transactions client-side to compute totals.
-* `GET /api/accounts/:id` — get account details + transactions (already in accountsController as `getAccount()` but route commented out; enable it if needed)
-
 ---
 
 ## Database schema & migrations (notes)
@@ -170,34 +152,12 @@ Tables used (see `001_create_users.sql` style):
 * `transactions` — user_id, account_id, txn_ref, amount NUMERIC, currency, txn_date, narration, category, raw_meta JSONB
 * `webhook_events` — store webhook events if needed
 
-If you add new features, add migrations for:
-
-* `goals` and `goal_transactions`
-* `payments`
-* `user_settings`
-* `support_tickets`
-
-Example migration command pattern:
-
-```sql
--- migrations/002_create_goals.sql
-CREATE TABLE IF NOT EXISTS goals (
-  id BIGSERIAL PRIMARY KEY,
-  user_id BIGINT REFERENCES users(id),
-  name TEXT NOT NULL,
-  target_amount NUMERIC NOT NULL,
-  timeframe JSONB,
-  category TEXT,
-  progress JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
 
 ---
 
 ## Roadmap (planned / ongoing work — detailed)
 
-**Status:** *Ongoing project* — the items below are planned and being worked on. Please open Issues or PRs against the `dev` branch.
+**Status:** *Ongoing project* — the items below are planned and being worked on.
 
 ### 1) Budget Goals (High priority)
 
@@ -270,18 +230,9 @@ CREATE TABLE IF NOT EXISTS goals (
 
 
 ## contact
-
-* Author / Maintainer: Diptesh Singh 
+* This is a Group Project consisting of 2 members - Diptesh Singh and Jay Kishan Patra
 * Project status: **Ongoing** — active development in `dev` branch.
 
 ---
 
-### Quick copy: Short badge and top message for README (paste at top):
-
-```
-**All code in the `dev` branch — work in progress**  
-Status: **Work in progress** — Budget Goals, Razorpay integration, Settings & Support are planned and under development. Contributions welcome (open PRs against `dev`).
-```
-
----
 
