@@ -1,242 +1,290 @@
+# Finance-Tracker
+
+> **Work in progress — all active development is on the `dev` branch.**
+> This repo contains the Finance-Tracker web app (Next.js frontend + Node/Express backend + PostgreSQL). The project is **ongoing** — core dashboard, account linking and transactions are working, several UX pages are built and more server features are being implemented (see Roadmap).
 
 ---
 
-````md
-# Finance-Tracker
+---
 
-> **Work in progress — all active development is on the `dev` branch.**  
-> This repository contains the source for the Finance-Tracker web app (React / Next.js frontend + Node/Express backend + PostgreSQL). The app provides a dashboard to view deposits, spends and transactions across connected bank accounts (via Setu / Open Banking). **Project is ongoing** — see Roadmap below for planned features.
+> **Branch note:** Development originally happened on the `diptesh` branch for most early commits. For cleanliness and better project structure, all latest and active work has been consolidated into the `dev` branch. If you wish to explore the full commit history or earlier development progression, the `diptesh` branch still contains all previous commits — but it does *not* include the most recent updates.
 
-![Dashboard screenshot](/mnt/data/dashboard-1.png)
-![](/mnt/data/dashboard-2.png)
+---
+
+## Screenshots
+
+**Dashboard / Home**
+![Dashboard 1](/mnt/data/dashboard-1.png) ![](/mnt/data/dashboard-2.png)
+
+**Transactions / Recent Transactions**
+![](/mnt/data/transactions.png)
+
+**My Bank / Connect Bank**
+![](/mnt/data/my-bank.png) ![](/mnt/data/connect-bank.png)
+
+**Transfer Funds / Payment Schedule**
+![](/mnt/data/transfer-funds.png) ![](/mnt/data/payment-schedule.png)
+
+**Budget Goals / Monthly Budgets**
+![](/mnt/data/budget-goals.png) ![](/mnt/data/monthly-budgets.png)
+
+**Support / Settings**
+![](/mnt/data/support.png) ![](/mnt/data/settings.png)
+
 ---
 
 ## Table of contents
 
-- [Overview](#overview)  
-- [Current features](#current-features)  
-- [Architecture & Tech stack](#architecture--tech-stack)  
-- [Quick start (local development)](#quick-start-local-development)  
-- [Important environment variables](#important-environment-variables)  
-- [API overview (existing endpoints)](#api-overview-existing-endpoints)  
-- [Database schema & migrations (notes)](#database-schema--migrations-notes)  
-- [Roadmap (planned / ongoing work)](#roadmap-planned--ongoing-work)  
-  - Budget Goals  
-  - Razorpay Integration  
-  - Settings (User Preferences)  
-  - Support / Ticketing  
-- [Testing & deployment notes](#testing--deployment-notes)  
-- [Contributing](#contact)
+* [Overview](#overview)
+* [Status & Notes](#status--notes)
+* [Current features (implemented)](#current-features-implemented)
+* [UI done / Pending implementation](#ui-done--pending-implementation)
+* [Architecture & tech stack](#architecture--tech-stack)
+* [Quick start (local development)](#quick-start-local-development)
+* [Important environment variables (summary)](#important-environment-variables-summary)
+* [API & DB notes (what exists)](#api--db-notes-what-exists)
+* [Roadmap / Planned work (detailed)](#roadmap--planned-work-detailed)
+* [Security & auth notes](#security--auth-notes)
+* [Contributing & contact](#contributing--contact)
 
 ---
 
 ## Overview
 
-Finance-Tracker is a personal finance dashboard that connects to bank accounts (via Setu / other bank connectors), pulls transaction history and account balances, and shows a consolidated dashboard (deposits, spent, total balance, charts, recent transactions, payment schedule, budget goals UI). The codebase is split across:
+Finance-Tracker is a personal finance dashboard that connects to bank accounts via a connector (Setu-style), pulls account balances & transactions and shows consolidated views:
 
-- `frontend/` — Next.js / React app (client + server components where used)
-- `backend/` — Express API and DB migrations
-- `migrations/` — (SQL) database migration files
+* Dashboard with **Deposits**, **Spent**, **Total Current Balance**, monthly charts and **Recent Transactions**.
+* Transaction history with pagination and per-account filtering.
+* Account management (My Bank / Connect Bank) to view and disconnect accounts.
+* Payment schedule and basic transfer UI, Budget Goals UI, Virtual Card UI (UI-only for now).
+* Authentication (local + Google OAuth), token-based sessions, and password reset flow.
 
-> **Important:** Active development is on the `dev` branch. `main` may contain stable snapshots only.
-
----
-
-## Current features
-
-- Connect bank accounts via Setu-like flows (consents & data sessions)
-- List connected accounts, read their `raw_meta` and current balances
-- Fetch transactions with pagination (`/api/transactions`) and show in Dashboard → Recent Transactions and in separate Transactions page.
-- Dashboard with Stat cards (Deposits, Spent, Total Current Balance), Spend chart (monthly), Virtual card, Payment Schedule, Recent Transactions
-- Authentication routes and token middleware (JWT-based access)
-- Backend enforces `requireAuth` middleware for protected endpoints
-- Very small admin / account utilities (account listing)
+> **Important:** **All active development is on the `dev` branch.** `main` is kept for snapshots.
 
 ---
 
-## Architecture & Tech stack
+## Status & Notes
 
-- Frontend: **Next.js (app router)**, React, Tailwind CSS, lucide-react icons, framer-motion
-- Backend: **Node.js + Express**
-- Database: **Postgres**
-- Authentication: JWT tokens + cookie-based flows (see `auth` routes)
-- Deployment: Designed for Heroku/Render/AWS for backend and Vercel/Netlify for frontend
-- External integration: Setu-like Bank Connector (consents/data_session), (planned) Razorpay for payments
+* **Project status:** Ongoing (development). Not deployed to production.
+* **Auth / Security:** Access tokens + Refresh tokens implemented. Forgot-password via Nodemailer implemented.
+* **OAuth:** Google OAuth implemented (server-side).
+* **Images & UI:** Many pages have finished UI/UX. Some backend functionality for planned features is pending.
+
+---
+
+## Current features (implemented)
+
+**Backend & API**
+
+* Express API with routes for auth and protected endpoints.
+* `/api/accounts` — list user accounts (reads `raw_meta` and returns current balance).
+* `/api/transactions` — paginated transaction listing with `limit`, `offset`, `accountId` and `consentId` filters. Returns normalized transactions and `total` count.
+* `transactionsController` normalizes direction/amount and joins `accounts` so each transaction includes account info (bank_name, account_masked).
+* Payment schedules table + endpoints (list implemented).
+* Database migrations included (Postgres SQL files).
+
+**Frontend**
+
+* Next.js (app router) dashboard with:
+
+  * Stat cards (Deposits, Spent, Balance)
+  * Account selector (select single account or All accounts)
+  * Recent transactions (top 5 on dashboard)
+  * Transactions page (paginated)
+  * My Bank and Connect Bank pages (connect/disconnect flows)
+  * Payment schedule & Budget Goals UI components
+* Responsive layout, Tailwind CSS, reusable components.
+
+---
+
+## UI done / Pending implementation (summary)
+
+**Fully implemented (backend + frontend):**
+
+* **Dashboard** (stat cards, chart, recent transactions)
+* **My Bank** (list connected accounts, balances)
+* **Connect Bank** (consent / data-session flows integrated)
+* **Transactions** page (paginated list using `/api/transactions`)
+* **Payment Schedules** (list + UI)
+
+**UI implemented but backend / final logic pending:**
+
+* **Budget Goals** — full UI built (create/edit/top-up flows designed). Backend CRUD endpoints exist in roadmap but final linking of transactions → goals is ongoing.
+* **Virtual Card** — UI designed (virtual card mock). Server-side issuance & Razorpay / payment flows pending.
+* **Transfer Funds** — UI available (form, beneficiary list). Real transfer flow / third-party integration pending.
+* **Settings** — profile/settings UI created; persisting user preferences endpoint pending.
+* **Support** — Support page UI & contact form built; ticketing backend not fully implemented.
+
+> **UX note:** When user selects **All accounts**, each transaction on lists now includes account metadata (bank_name / masked) so you can see which account the transaction belongs to — ensure backend keeps returning the `account` object for each transaction (this is already implemented in the `transactionsController` left join).
+
+---
+
+## Architecture & tech stack
+
+* **Frontend:** Next.js (app router), React, Tailwind CSS, lucide-react (icons).
+* **Backend:** Node.js + Express.
+* **DB:** PostgreSQL. Migrations are in `backend/migrations/`.
+* **Auth:** JWT access token + refresh token flow; refresh tokens stored/hashed server-side. Google OAuth supported.
+* **External:** Setu (sandbox) connector for account/transaction fetching. Razorpay planned for payment flows.
+* **Env / config:** `.env` used locally; secrets must not be checked into git.
 
 ---
 
 ## Quick start (local development)
 
-> These instructions assume you have Node.js (>=16), npm or pnpm, and PostgreSQL installed.
+1. Clone & checkout `dev`:
 
-1. **Clone the repo**
-   ```bash
-   git clone <your-repo-url>
-   cd Finance-Tracker
-   git checkout dev
-````
+```bash
+git clone <your-repo-url>
+cd Finance-Tracker
+git checkout dev
+```
 
-2. **Backend**
+2. Backend:
 
-   ```bash
-   cd backend
-   npm install
-   # create .env from .env.example and set DB connection + other secrets
-   npm run dev         # or: nodemon index.js
-   ```
+```bash
+cd backend
+npm install
+# create .env (see env summary below)
+npm run dev
+# backend default: http://localhost:5000
+```
 
-   * Backend runs on `http://localhost:5000` by default (or `PORT` env var).
+3. Frontend:
 
-3. **Frontend**
+```bash
+cd ../frontend
+npm install
+# set NEXT_PUBLIC_BACKEND_URL in frontend/.env (e.g. http://localhost:5000)
+npm run dev
+# frontend default: http://localhost:3000
+```
 
-   ```bash
-   cd ../frontend
-   npm install
-   # update NEXT_PUBLIC_BACKEND_URL to your backend (example: http://localhost:5000)
-   npm run dev         # next dev
-   ```
-
-   * Frontend runs on `http://localhost:3000` by default.
-
----
-
-## Important environment variables
-
-Set these in `backend/.env` (names found in code):
-
-* `DATABASE_URL` — Postgres connection string (e.g., `postgres://user:pass@localhost:5432/financetracker`)
-* `PORT` — backend port (default `5000`)
-* `FRONTEND_URL` — allowed origin for CORS (e.g., `http://localhost:3000`)
-* `NEXT_PUBLIC_BACKEND_URL` — used by frontend (set in frontend env) e.g. `http://localhost:5000`
-* `SETU_AUTH_URL`, `SETU_CLIENT_ID`, `SETU_CLIENT_SECRET` — (Setu / Open-banking) credentials used by tokenManager
-* `RATE_LIMIT_MAX` — API rate limiting max calls per minute
-* Add your JWT secret or keys if required by your auth/token manager
-
-> Keep all secrets out of source control (use `.env` or secret manager).
+Open `http://localhost:3000` and login / connect bank accounts.
 
 ---
 
-## API overview (existing endpoints)
+## Important environment variables (summary)
 
-> Summary of server endpoints that currently exist in code:
+> Edit `backend/.env` and `frontend/.env` accordingly.
 
-**Public / Auth**
+**backend/.env (examples already in repo)**
 
-* `POST /login`, `POST /register`
-* `POST /logout` — server logout route (cookies)
+```
+DATABASE_URL=postgres://postgres:password@localhost:5432/finance_tracker
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
 
-**Auth protected (requires `Authorization: Bearer <token>` or cookie as configured)**
+# JWT
+JWT_SECRET=<your-jwt-secret>
+JWT_EXPIRES_IN=15m
+REFRESH_TOKEN_PEPPER=<random-secret>
+REFRESH_TOKEN_EXPIRES_DAYS=30
 
-* `GET /api/me` — returns current user
-* `GET /api/accounts` — list accounts for the authenticated user (`?consentId=...` supported)
-* `GET /api/transactions` — list transactions with pagination and filters:
+# SMTP (forgot password)
+SMTP_HOST=smtp.gmail.com
+SMTP_USER=<your-email>
+SMTP_PASS=<app-password>
 
-  * `limit`, `offset`
-  * `accountId` (filter by single account)
-  * `consentId`
-  * returns `{ ok: true, transactions: [...], total }` (total is authoritative)
-* `POST /api/setu/*` — Setu-consent related endpoints (under `/api/setu` routes)
-* `GET /api/payment-schedules` — payment schedule listing (used for the right column)
-* `GET /health` — healthcheck
+# Google OAuth
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
 
----
+# Setu (sandbox)
+SETU_BASE=https://fiu-sandbox.setu.co/v2
+SETU_PRODUCT_INSTANCE_ID=...
+SETU_CLIENT_ID=...
+SETU_CLIENT_SECRET=...
+SETU_AUTH_URL=https://orgservice-prod.setu.co/v1/users/login
+SETU_AUTO_FETCH=false
+```
 
-## Database schema & migrations (notes)
+**frontend/.env**
 
-Tables used (see `001_create_users.sql` style):
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+```
 
-* `users` (existing auth table)
-* `consents` — store consent metadata
-* `data_sessions` — Setu/connector session records
-* `accounts` — user_id, consent_id, fip_account_id, bank_name, account_masked, raw_meta JSONB, created_at
-* `transactions` — user_id, account_id, txn_ref, amount NUMERIC, currency, txn_date, narration, category, raw_meta JSONB
-* `webhook_events` — store webhook events if needed
-
-
----
-
-## Roadmap (planned / ongoing work — detailed)
-
-**Status:** *Ongoing project* — the items below are planned and being worked on.
-
-### 1) Budget Goals (High priority)
-
-**What:** Allow users to create budgets (monthly/quarterly/yearly), track transaction matches to budgets, visualize progress, and notify near-limit.
-**Backend:** CRUD endpoints:
-
-* `POST /api/goals`
-* `GET /api/goals`
-* `GET /api/goals/:id`
-* `PUT /api/goals/:id`
-* `DELETE /api/goals/:id`
-  **DB:** `goals` and `goal_transactions` join table to map transactions to goals.
-  **Frontend:** `BudgetGoals` page — create/edit modal, progress bar, charts.
-
-### 2) Razorpay Integration (Medium)
-
-**What:** Accept payments / top-ups (e.g., user topping virtual card), or pay vendors.
-**Security:** Create orders server-side and verify webhook signature on server. **Do not** store Razorpay secret on client.
-**Backend endpoints:**
-
-* `POST /api/payments/create-order` — server-side create order
-* `POST /api/payments/verify` — verify success signature
-* `POST /api/payments/webhook` — listen for payment events
-  **DB:** `payments` table storing order_id, payment_id, status, amount, metadata.
-
-### 3) Settings (User Preferences) (Medium)
-
-**What:** User preferences (notifications, theme, auto-refresh connected banks, currency, date format).
-**Backend:** `GET/PUT /api/user/settings`
-**DB:** either `user_settings` table or `settings` JSONB column on `users`.
-
-### 4) Support / Ticketing (Low -> Medium)
-
-**What:** Allow users to raise support tickets, store them in DB, admin panel to view.
-**Backend:** `POST /api/support/tickets`, `GET /api/support/tickets` (admin)
-**DB:** `support_tickets` table.
+> Keep secrets out of source control. Use a secret manager for production.
 
 ---
 
-## UX & data behavior notes (important)
+## API & DB notes (what exists)
 
-* Transactions may have inconsistent shapes from different banks; server normalizes:
+**Key backend endpoints**
 
-  * `amount` is stored as positive numeric (sign handled by `direction` / `raw_meta`)
-  * `direction` computed server-side from `amount` sign or `raw_meta.type`
-* The frontend uses a `limit=200` maximum when fetching transactions (backend enforces `Math.min(200, ...)`).
+* `POST /login`, `POST /register`, `POST /logout`
+* `GET /api/me` — current user
+* `GET /api/accounts` — list accounts (includes `raw_meta` + balance)
+* `GET /api/transactions?limit=&offset=&accountId=` — returns `{ ok: true, transactions: [...], total }`
+* `GET /api/payment-schedules` — list payment schedules
+* Setu related endpoints for creating consents / data sessions / webhooks.
 
-  * For full-history calculations (sums across all time) use `GET /api/dashboard/summary` (recommended).
-* When `ALL accounts` is selected in Dashboard, the frontend displays aggregated totals from accounts list + optionally from `/api/dashboard/summary`.
+**Database / migrations**
 
----
-
-## Recent transactions on Dashboard (behavior)
-
-* Dashboard displays at most 5 most recent transactions in the RecentTransactions component.
-* Refactor note: to show account next to each transaction when `All accounts` is selected, ensure backend returns `account` (id, bank_name, account_masked) for each transaction — the current `transactionsController` already left-joins `accounts a` and returns `account` with `bank_name` and `account_masked`. Use these fields in RecentTransactions display.
+* Migrations in `backend/migrations/` create tables: `users`, `auth_credentials`, `accounts`, `transactions`, `consents`, `data_sessions`, `payment_schedules`, `saving_goals`, `goal_transactions`, `contact_submissions` etc.
+* `transactionsController` returns `account` (bank_name, account_masked) with each txn — make sure to keep `LEFT JOIN accounts` so UI shows account per txn.
 
 ---
 
-## Testing & deployment notes
+## Roadmap — planned & ongoing work (detailed)
 
-* Add unit tests for `transactionsController` edgecases (direction detection, negative amounts, missing raw_meta).
-* Use environment-specific configs for Setu and Razorpay keys (test vs production).
-* Recommended deployment:
+**Status: ongoing — prioritized list**
 
-  * Backend: Heroku / Render / AWS ECS with `DATABASE_URL` and env secrets.
-  * Frontend: Vercel (set `NEXT_PUBLIC_BACKEND_URL` accordingly).
+1. **Budget Goals (High)**
+
+   * Backend endpoints: CRUD for goals + top-ups.
+   * Link transactions to goals automatically (matching rules or manual assign).
+   * Notifications when goal targets near.
+
+2. **Virtual Card & Card Addition (High)**
+
+   * Issue virtual card to users (server-side), top-up via payments, store masked details.
+   * UI exists; server implementation pending.
+
+3. **Transfer Funds / Razorpay Integration (Medium)**
+
+   * Integrate Razorpay for top-ups / payments (server creates orders + routes to verify webhooks).
+   * Build secure transfer flows (2FA / confirmation).
+
+4. **Settings & Preferences (Medium)**
+
+   * Persist user preferences (theme, currency, notification toggles).
+   * `GET/PUT /api/user/settings` endpoints.
+
+5. **Support / Ticketing (Medium)**
+
+   * Support ticket endpoint, admin view, reply flow.
+   * Currently support UI exists; server ticketing pending.
 
 ---
 
+## Security & auth notes
 
-## contact
-* This is a Group Project consisting of 2 members - Diptesh Singh and Jay Kishan Patra
-* Project status: **Ongoing** — active development in `dev` branch.
+* **Two token types:** Access token (short-lived JWT) + Refresh token (opaque string hashed & stored). This approach allows short-lived access tokens while enabling silent refresh.
+* **Forgot password** implemented via **nodemailer** (server sends reset email with token).
+* **Google OAuth** implemented (server side).
+* **Sensitive data:** Bank `raw_meta` stored as JSONB; ensure DB & backups are secure.
+* **Webhooks:** If you enable Setu/Payment webhooks, validate signatures (HMAC) before accepting events.
 
 ---
 
+## Contributing & contact
+
+* **Team:** Diptesh Singh & Jay Kishan Patra
+* **Development branch:** `dev` 
+
+---
+
+## Final notes (short)
+
+* **All active code is on the `dev` branch.**
+* **Project is ongoing** — UI for many pages is done, but server-side implementation for *Budget Goals (persist/finalize), Virtual Card issuance, Transfer funds (real payments), Razorpay* and *Support ticketing* is still in progress.
+* **Auth:** Access + Refresh -> implemented; **Forgot password** via nodemailer implemented; **Google OAuth** implemented.
+
+**Branch note (friendly):** During early development most pushes and pulls were performed on the `diptesh` branch and it contains the fuller commit history and earlier iterations. To keep the repository history cleaner and make active work easier to follow, the latest, up-to-date code and continuing development have been consolidated on the `dev` branch. If you want to review older commits or the development timeline, the `diptesh` branch is a good place to look — but for the current codebase and ongoing work, please use `dev`.
 
 
-
-
-
+---
