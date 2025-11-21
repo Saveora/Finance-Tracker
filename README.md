@@ -69,7 +69,7 @@ Finance-Tracker is a personal finance dashboard that connects to bank accounts v
 * Payment schedule and basic transfer UI, Budget Goals UI, Virtual Card UI (UI-only for now).
 * Authentication (local + Google OAuth), token-based sessions, and password reset flow.
 
-> **Important:** **All active development is on the `dev` branch.** `main` is kept for snapshots.
+> **Important:** **All active development is on the `dev` branch.**
 
 ---
 
@@ -298,4 +298,5 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
 
 
 ---
+
 
